@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevOps projects for people who come from networking</title>
+<meta name="description" content="Eight hands-on DevOps projects with architecture diagrams, step-by-step build instructions, and code: Terraform, AWS, Kubernetes, Ansible, CI/CD, monitoring, and hybrid networking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EDF1F4;
+    --surface: #FFFFFF;
+    --ink: #14213D;
+    --muted: #4A5873;
+    --line: #C5CFDA;
+    --pub: #FBE7C6;
+    --pub-line: #B47A12;
+    --priv: #CDEBEA;
+    --priv-line: #0B6A6D;
+    --data: #E4E8EE;
+    --accent: #0B6A6D;
+    --code-bg: #14213D;
+    --code-ink: #E8EEF7;
+    --font-head: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0F1626;
+      --surface: #17213A;
+      --ink: #E6ECF5;
+      --muted: #9FB0C8;
+      --line: #2B3A59;
+      --pub: #3A2D14;
+      --pub-line: #E0A93B;
+      --priv: #0F3A3C;
+      --priv-line: #4DC3C6;
+      --data: #1E2A44;
+      --accent: #4DC3C6;
+      --code-bg: #0A101D;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 56px;
+  }
+
+  /* Side navigation */
+  .toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding-top: 64px;
+    font-size: 15px;
+  }
+  .toc p { margin: 0 0 10px; font-family: var(--font-head); font-weight: 600; }
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+  .toc li a {
+    display: block;
+    padding: 5px 0 5px 14px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .toc li a:hover { color: var(--ink); }
+
+  main { min-width: 0; padding-top: 64px; }
+
+  /* Header */
+  h1 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 50px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    max-width: 18ch;
+  }
+  .lede { font-size: 19px; max-width: 62ch; margin: 0 0 28px; color: var(--muted); }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0;
+    border-top: 2px solid var(--ink);
+    margin: 0 0 56px;
+  }
+  .facts div { padding: 14px 18px 14px 0; }
+  .facts dt { font-family: var(--font-head); font-weight: 600; font-size: 15px; }
+  .facts dd { margin: 2px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+
+  h2 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 72px 0 16px;
+  }
+  h3 {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 21px;
+    line-height: 1.25;
+    margin: 0 0 8px;
+  }
+  p { margin: 0 0 16px; max-width: 68ch; }
+  ul, ol { max-width: 68ch; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--data);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* Diagram */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  .diagram svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  .diagram .box { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+  .diagram .region { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 2 5; }
+  .diagram .vpc { fill: none; stroke: var(--ink); stroke-width: 2; }
+  .diagram .az { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  .diagram .pub { fill: var(--pub); stroke: var(--pub-line); stroke-width: 1.5; }
+  .diagram .priv { fill: var(--priv); stroke: var(--priv-line); stroke-width: 1.5; }
+  .diagram .data { fill: var(--data); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .diagram .bar { fill: var(--data); stroke: var(--line); stroke-width: 1.5; }
+  .diagram .optional { stroke-dasharray: 5 4; }
+  .diagram .flow { fill: none; stroke: var(--ink); stroke-width: 1.8; marker-end: url(#arr); }
+  .diagram .egress { fill: none; stroke: var(--pub-line); stroke-width: 1.8; stroke-dasharray: 5 4; marker-end: url(#arr-egress); }
+  .diagram .dbflow { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; marker-end: url(#arr-muted); }
+  .diagram .ah { fill: var(--ink); }
+  .diagram .ah-egress { fill: var(--pub-line); }
+  .diagram .ah-muted { fill: var(--muted); }
+  .diagram text { fill: var(--ink); font-family: var(--font-body); font-size: 13px; }
+  .diagram .tb { font-family: var(--font-head); font-weight: 600; font-size: 14px; }
+  .diagram .ts { font-size: 11.5px; fill: var(--muted); }
+  .diagram .lbl { font-family: var(--font-head); font-weight: 600; font-size: 14px; }
+  .diagram .end { text-anchor: end; }
+  .diagram .mid { text-anchor: middle; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+    max-width: none;
+  }
+  .legend li { display: flex; align-items: center; gap: 8px; margin: 0; }
+  .swatch { width: 22px; height: 14px; border: 1.5px solid; border-radius: 2px; flex: none; }
+  .swatch.pub { background: var(--pub); border-color: var(--pub-line); }
+  .swatch.priv { background: var(--priv); border-color: var(--priv-line); }
+  .swatch.data { background: var(--data); border-color: var(--muted); border-style: dashed; }
+  .line { width: 26px; flex: none; border-top: 2px solid var(--ink); }
+  .line.dash { border-top: 2px dashed var(--pub-line); }
+
+  .flowlist { margin-top: 24px; }
+
+  /* Steps */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; max-width: none; }
+  .step {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 40px 64px;
+    margin: 0;
+  }
+  .step::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 18px;
+    background: var(--surface);
+  }
+  .step::after {
+    content: "";
+    position: absolute;
+    left: 19px;
+    top: 46px;
+    bottom: 6px;
+    border-left: 2px solid var(--line);
+  }
+  .step:last-child::after { display: none; }
+  .step h3 { padding-top: 6px; }
+
+  .note {
+    border-left: 4px solid var(--pub-line);
+    background: var(--surface);
+    padding: 12px 16px;
+    margin: 0 0 16px;
+    max-width: 68ch;
+    font-size: 16px;
+  }
+
+  /* Code */
+  .code { position: relative; margin: 0 0 18px; max-width: 100%; }
+  .code .name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--ink);
+    color: var(--paper);
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 4px 4px 0 0;
+  }
+  .code pre {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px 18px;
+    overflow-x: auto;
+    border-radius: 0 6px 6px 6px;
+    tab-size: 2;
+  }
+  .code button {
+    position: absolute;
+    right: 8px;
+    top: 36px;
+    font: 500 13px var(--font-body);
+    background: transparent;
+    color: var(--code-ink);
+    border: 1px solid #5B6B8A;
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+  .code button:hover { background: #26365A; }
+
+  /* Checklist and extensions */
+  .checks { list-style: none; padding: 0; max-width: 68ch; }
+  .checks li { padding-left: 30px; position: relative; }
+  .checks li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  .ext { border-top: 1px solid var(--line); max-width: 68ch; }
+  .ext details { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .ext summary { cursor: pointer; font-family: var(--font-head); font-weight: 600; font-size: 18px; }
+  .ext details p { margin: 8px 0 0; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+
+  @media (max-width: 920px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 18px 64px; }
+    .toc { display: none; }
+    main { padding-top: 40px; }
+    .step { padding-left: 52px; }
+  }
+
+  /* ---- Combined guide additions ---- */
+  .js .project { display: none; }
+  .js .project.active { display: block; }
+  .project h1 { max-width: 26ch; }
+  .project h1:focus { outline: none; }
+  .project h2 { margin-top: 56px; }
+  .project > header + section > h2 { margin-top: 0; }
+  .toc { padding-top: 64px; }
+  .toc p { font-size: 17px; }
+  .toc li a[aria-current="page"] {
+    color: var(--ink);
+    font-weight: 600;
+    border-left: 3px solid var(--accent);
+    margin-left: -2px;
+    padding-left: 13px;
+  }
+  .next { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); max-width: none; }
+
+  .index { list-style: none; margin: 0 0 40px; padding: 0; max-width: none; border-top: 2px solid var(--ink); }
+  .index li { margin: 0; border-bottom: 1px solid var(--line); }
+  .index a {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 2px 16px;
+    padding: 16px 6px;
+    text-decoration: none;
+    color: var(--ink);
+    align-items: baseline;
+  }
+  .index a:hover { background: var(--surface); }
+  .index .n { font-family: var(--font-head); font-weight: 700; font-size: 24px; grid-row: 1 / span 2; }
+  .index .t { font-family: var(--font-head); font-weight: 600; font-size: 20px; grid-column: 2; }
+  .index .m { grid-column: 3; grid-row: 1; font-size: 14px; color: var(--muted); text-align: right; }
+  .index .d { grid-column: 2 / span 2; color: var(--muted); font-size: 15px; }
+
+  .tbl { width: 100%; max-width: 68ch; border-collapse: collapse; font-size: 15px; margin: 0 0 18px; }
+  .tbl th, .tbl td { text-align: left; padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl th { font-family: var(--font-head); border-bottom: 2px solid var(--ink); }
+
+  /* Generated diagrams */
+  .ah { fill: var(--ink); }
+  .ah-egress { fill: var(--pub-line); }
+  .ah-muted { fill: var(--muted); }
+  .diagram .grp { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 2 5; }
+  .diagram .glabel { font-family: var(--font-head); font-weight: 600; font-size: 13px; fill: var(--muted); }
+  .diagram .both { marker-start: url(#arr); }
+  .diagram .elabel {
+    font-size: 11.5px;
+    fill: var(--muted);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  @media (max-width: 920px) {
+    .toc { display: block; position: static; padding-top: 18px; }
+    .toc p { margin-bottom: 6px; }
+    .toc ol { display: flex; overflow-x: auto; border-left: 0; border-bottom: 2px solid var(--line); }
+    .toc li a { white-space: nowrap; padding: 8px 12px; }
+    .toc li a[aria-current="page"] { border-left: 0; border-bottom: 3px solid var(--accent); margin: 0 0 -2px; padding-left: 12px; }
+    .index a { grid-template-columns: 32px 1fr; }
+    .index .m { grid-column: 2; grid-row: auto; text-align: left; }
+    .index .d { grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker><marker id="arr-egress" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-egress"/></marker><marker id="arr-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-muted"/></marker></defs></svg><div class="shell">
+<nav class="toc" aria-label="Projects"><p>DevOps project guide</p><ol><li><a href="#home">Overview</a></li><li><a href="#p1">1. AWS network and CI/CD</a></li><li><a href="#p2">2. Config backup and compliance</a></li><li><a href="#p3">3. Transit Gateway hub-and-spoke</a></li><li><a href="#p4">4. Kubernetes networking on EKS</a></li><li><a href="#p5">5. Network monitoring and alerts</a></li><li><a href="#p6">6. NetDevOps pipeline</a></li><li><a href="#p7">7. Self-healing infrastructure</a></li><li><a href="#p8">8. Hybrid cloud VPN lab</a></li><li><a href="#portfolio">Portfolio checklist</a></li></ol></nav>
+<main>
+<section class="project" id="home" aria-labelledby="home-h1"><header><h1 id="home-h1" tabindex="-1">DevOps projects for people who come from networking</h1><p class="lede">Eight hands-on projects that build real DevOps skills on top of a networking background. Each one has an architecture diagram, build steps with code, and a checklist to prove it works. Pick one below or from the list on the left.</p><dl class="facts"><div><dt>Projects</dt><dd>8, from beginner to advanced</dd></div><div><dt>Core tools</dt><dd>Terraform, Ansible, Python, Docker, Kubernetes, GitHub Actions</dd></div><div><dt>Cloud</dt><dd>AWS, with free or low-cost lab options</dd></div><div><dt>Format</dt><dd>Diagram, steps, code, verification, stretch goals</dd></div></dl></header><section><h2>Choose a project</h2><ul class="index"><li><a href="#p1"><span class="n">1</span><span class="t">AWS network and CI/CD</span><span class="m">Beginner to intermediate, 2 to 3 weekends</span><span class="d">A multi-tier VPC in Terraform with a GitHub Actions pipeline deploying a containerized app.</span></a></li><li><a href="#p2"><span class="n">2</span><span class="t">Config backup and compliance checker</span><span class="m">Beginner, 1 to 2 weekends</span><span class="d">Back up device configs to S3 and flag drift from a baseline.</span></a></li><li><a href="#p3"><span class="n">3</span><span class="t">Transit Gateway hub-and-spoke</span><span class="m">Intermediate, 2 weekends</span><span class="d">Segmented multi-VPC network with a simulated on-prem VPN.</span></a></li><li><a href="#p4"><span class="n">4</span><span class="t">Kubernetes networking on EKS</span><span class="m">Intermediate, 2 to 3 weekends</span><span class="d">Ingress, ExternalDNS, and network policies on a real cluster.</span></a></li><li><a href="#p5"><span class="n">5</span><span class="t">Network monitoring and alerting</span><span class="m">Intermediate, 1 to 2 weekends</span><span class="d">Flow logs, alarms, Logs Insights queries, and Grafana dashboards.</span></a></li><li><a href="#p6"><span class="n">6</span><span class="t">NetDevOps pipeline</span><span class="m">Advanced, 3 to 4 weekends</span><span class="d">Network changes through Git, CI validation, and Ansible deployment.</span></a></li><li><a href="#p7"><span class="n">7</span><span class="t">Self-healing infrastructure</span><span class="m">Advanced, 2 weekends</span><span class="d">Alarm, Lambda, and Systems Manager repair or replace failing instances.</span></a></li><li><a href="#p8"><span class="n">8</span><span class="t">Hybrid cloud connectivity lab</span><span class="m">Advanced, 2 to 3 weekends</span><span class="d">IPsec and BGP between a simulated data center and AWS, with failover.</span></a></li></ul></section><section><h2>Where to start</h2><ul><li><b>New to DevOps:</b> do projects 1 and 2 first. They teach Terraform, Git workflows, pipelines, and Python automation.</li><li><b>Strongest networking story:</b> 1, then 3, then 8. Together they show segmentation, hybrid connectivity, and everything as code.</li><li><b>Closest to a network engineer's day job:</b> 2, then 6.</li><li><b>Cloud-native and platform roles:</b> 1, 4, 5, then 7.</li></ul></section><section><h2>Before you start any project</h2><ul><li>Create an AWS account, enable MFA on the root user, and set up an AWS Budgets alert before launching anything. Work with an IAM Identity Center or IAM user, not root.</li><li>Install Git, Terraform 1.10 or newer, the AWS CLI v2, Docker, and Python 3.12. Individual projects list extra tools.</li><li>Replace placeholders such as <code>ap-south-1</code>, bucket names, and <code>YOUR_USER/YOUR_REPO</code> with your own values.</li><li>Treat every environment as disposable. Destroy resources after each session, since NAT gateways, load balancers, VPNs, and Kubernetes clusters bill by the hour.</li><li>Never commit secrets, keys, or account IDs. Use OIDC and GitHub secrets, and check the Git history before you publish a repository.</li></ul></section><footer>Publishing this page on GitHub Pages? Keep the file name <code>index.html</code>.</footer></section><section class="project" id="p1" aria-labelledby="p1-h1"><header><h1 id="p1-h1" tabindex="-1">A production-style AWS network, built with Terraform and CI/CD</h1><p class="lede">Build a multi-tier network on AWS, define it entirely as code, and let a GitHub Actions pipeline plan, apply, and deploy a containerized app into it. This is the foundation the later projects build on.</p><dl class="facts"><div><dt>Level</dt><dd>Beginner to intermediate</dd></div><div><dt>Time</dt><dd>2 to 3 weekends, part-time</dd></div><div><dt>Skills practiced</dt><dd>AWS networking, Terraform, Docker, GitHub Actions, CloudWatch</dd></div><div><dt>Cost</dt><dd>Low if you destroy it after each session. NAT gateways and load balancers bill by the hour.</dd></div></dl></header><section id="architecture" aria-labelledby="architecture-h">
+      <h2 id="architecture-h">Architecture</h2>
+      <p>Public traffic enters through an internet gateway and an Application Load Balancer. The app runs in private subnets across two availability zones, and a pipeline in GitHub builds and deploys everything.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 960 600" role="img" aria-labelledby="dg-title dg-desc" xmlns="http://www.w3.org/2000/svg">
+          <title id="dg-title">Architecture of the AWS network project</title>
+          <desc id="dg-desc">A developer pushes to GitHub, where GitHub Actions runs Terraform and builds container images, using S3 for state and ECR for images. Actions assumes an IAM role through OIDC into an AWS region. Users reach an internet gateway and an Application Load Balancer in a VPC. The load balancer forwards to ECS Fargate tasks in private subnets across two availability zones. NAT gateways in public subnets give the tasks outbound internet access. Optional RDS databases sit in private data subnets. VPC Flow Logs go to CloudWatch.</desc>
+          
+
+          <!-- Pipeline column -->
+          <text class="lbl" x="20" y="100">Pipeline (GitHub)</text>
+          <rect class="box" x="20" y="112" width="240" height="44" rx="4"/>
+          <text class="tb mid" x="140" y="131">Developer</text>
+          <text class="ts mid" x="140" y="147">git push or pull request</text>
+          <path class="flow" d="M140 156V186"/>
+
+          <rect class="box" x="20" y="186" width="240" height="44" rx="4"/>
+          <text class="tb mid" x="140" y="205">GitHub repository</text>
+          <text class="ts mid" x="140" y="221">app/ and infra/</text>
+          <path class="flow" d="M140 230V260"/>
+
+          <rect class="box" x="20" y="260" width="240" height="64" rx="4"/>
+          <text class="tb mid" x="140" y="280">GitHub Actions</text>
+          <text class="ts mid" x="140" y="298">fmt, validate, plan, apply</text>
+          <text class="ts mid" x="140" y="314">build, push, deploy</text>
+
+          <path class="flow" d="M76 324V380"/>
+          <path class="flow" d="M204 324V380"/>
+          <rect class="box" x="20" y="380" width="112" height="56" rx="4"/>
+          <text class="tb mid" x="76" y="404">S3 bucket</text>
+          <text class="ts mid" x="76" y="421">Terraform state</text>
+          <rect class="box" x="148" y="380" width="112" height="56" rx="4"/>
+          <text class="tb mid" x="204" y="404">Amazon ECR</text>
+          <text class="ts mid" x="204" y="421">container images</text>
+          <text class="ts" x="20" y="458">Regional services outside the VPC</text>
+
+          <path class="flow" d="M260 292H288"/>
+          <text class="ts" x="236" y="64">OIDC role</text>
+          <text class="ts" x="236" y="80">assumed by</text>
+          <text class="ts" x="236" y="96">Actions</text>
+
+          <!-- Users and gateway -->
+          <rect class="box" x="560" y="8" width="120" height="36" rx="4"/>
+          <text class="tb mid" x="620" y="31">Users</text>
+          <path class="flow" d="M620 44V88"/>
+
+          <!-- Region and VPC -->
+          <rect class="region" x="290" y="70" width="660" height="520" rx="6"/>
+          <text class="lbl" x="304" y="90">AWS region</text>
+          <rect class="vpc" x="306" y="100" width="628" height="478" rx="6"/>
+          <text class="lbl" x="320" y="124">VPC 10.0.0.0/16</text>
+
+          <rect class="box" x="565" y="88" width="110" height="24" rx="4"/>
+          <text class="ts mid" x="620" y="104" style="fill:var(--ink)">Internet gateway</text>
+          <path class="flow" d="M620 112V135"/>
+
+          <rect class="box" x="470" y="135" width="300" height="34" rx="4"/>
+          <text class="tb mid" x="620" y="157">Application Load Balancer</text>
+
+          <!-- AZ A -->
+          <rect class="az" x="322" y="185" width="292" height="340" rx="4"/>
+          <text class="ts" x="334" y="203">Availability zone A</text>
+
+          <rect class="pub" x="334" y="212" width="268" height="84" rx="4"/>
+          <text class="ts" x="346" y="229">Public 10.0.0.0/24</text>
+          <rect class="box" x="346" y="248" width="110" height="34" rx="4"/>
+          <text class="tb mid" x="401" y="270">NAT gateway</text>
+
+          <rect class="priv" x="334" y="306" width="268" height="104" rx="4"/>
+          <rect class="box" x="390" y="340" width="160" height="50" rx="4"/>
+          <text class="tb mid" x="470" y="361">ECS Fargate task</text>
+          <text class="ts mid" x="470" y="378">app container, port 8080</text>
+          <text class="ts" x="346" y="404">Private app 10.0.10.0/24</text>
+
+          <rect class="data" x="334" y="420" width="268" height="96" rx="4"/>
+          <rect class="box optional" x="390" y="450" width="160" height="40" rx="4"/>
+          <text class="tb mid" x="470" y="474">RDS (optional)</text>
+          <text class="ts" x="346" y="510">Private data 10.0.20.0/24</text>
+
+          <!-- AZ B -->
+          <rect class="az" x="626" y="185" width="292" height="340" rx="4"/>
+          <text class="ts end" x="906" y="203">Availability zone B</text>
+
+          <rect class="pub" x="638" y="212" width="268" height="84" rx="4"/>
+          <text class="ts end" x="894" y="229">Public 10.0.1.0/24</text>
+          <rect class="box" x="784" y="248" width="110" height="34" rx="4"/>
+          <text class="tb mid" x="839" y="270">NAT gateway</text>
+
+          <rect class="priv" x="638" y="306" width="268" height="104" rx="4"/>
+          <rect class="box" x="690" y="340" width="160" height="50" rx="4"/>
+          <text class="tb mid" x="770" y="361">ECS Fargate task</text>
+          <text class="ts mid" x="770" y="378">app container, port 8080</text>
+          <text class="ts end" x="894" y="404">Private app 10.0.11.0/24</text>
+
+          <rect class="data" x="638" y="420" width="268" height="96" rx="4"/>
+          <rect class="box optional" x="690" y="450" width="160" height="40" rx="4"/>
+          <text class="tb mid" x="770" y="474">RDS (optional)</text>
+          <text class="ts end" x="894" y="510">Private data 10.0.21.0/24</text>
+
+          <!-- Traffic -->
+          <path class="flow" d="M490 169V340"/>
+          <path class="flow" d="M750 169V340"/>
+          <path class="egress" d="M401 340V282"/>
+          <path class="egress" d="M839 340V282"/>
+          <path class="dbflow" d="M520 390V450"/>
+          <path class="dbflow" d="M720 390V450"/>
+
+          <!-- Observability -->
+          <rect class="bar" x="322" y="533" width="596" height="34" rx="4"/>
+          <text class="tb mid" x="620" y="554">VPC Flow Logs to CloudWatch Logs, alarms to SNS</text>
+        </svg>
+      </div>
+
+      <ul class="legend" aria-label="Diagram legend">
+        <li><span class="swatch pub"></span>Public subnet</li>
+        <li><span class="swatch priv"></span>Private app subnet</li>
+        <li><span class="swatch data"></span>Private data subnet</li>
+        <li><span class="line"></span>Request path</li>
+        <li><span class="line dash"></span>Outbound internet through NAT</li>
+      </ul>
+
+      <h3 style="margin-top:32px">How a request travels</h3>
+      <ol class="flowlist">
+        <li>A user hits the load balancer's DNS name. Traffic enters the VPC through the internet gateway.</li>
+        <li>The load balancer, placed in the public subnets, forwards requests to healthy tasks in the private subnets. Security groups allow the app port only from the load balancer.</li>
+        <li>Tasks have no public IPs. When they need the internet (OS updates, external APIs), their route table sends <code>0.0.0.0/0</code> to the NAT gateway in the public subnet.</li>
+        <li>Fargate pulls the container image from ECR. Flow logs record accepted and rejected traffic for troubleshooting.</li>
+      </ol>
+    </section>
+
+    <section id="before" aria-labelledby="before-h">
+      <h2 id="before-h">Before you start</h2>
+      <ul>
+        <li>An AWS account with a budget alert set (AWS Budgets) and MFA on the root user. Do the work with an IAM Identity Center or IAM user, not root.</li>
+        <li>Installed locally: Terraform 1.10 or newer, AWS CLI v2, Docker, and Git.</li>
+        <li>A GitHub account and an empty repository for the project.</li>
+        <li>Basic comfort with CIDR notation and routing. If you work in networking, you already have the hardest part of this project covered.</li>
+      </ul>
+      <p>Replace <code>ap-south-1</code>, bucket names, and <code>YOUR_USER/YOUR_REPO</code> in the snippets with your own values.</p>
+    </section>
+
+    <section id="steps" aria-labelledby="steps-h">
+      <h2 id="steps-h">Build steps</h2>
+
+      <ol class="steps">
+
+        <li class="step">
+          <h3>Set up the repository layout</h3>
+          <p>Separate the application, the reusable Terraform modules, and the environment that wires them together. This structure is easy to extend with a second environment later.</p>
+          <div class="code"><span class="name">layout</span><pre><code>devops-aws-project/
+├── app/                      # sample app + Dockerfile
+├── infra/
+│   ├── bootstrap/            # one-time: remote state bucket
+│   ├── modules/
+│   │   ├── network/          # VPC, subnets, routes, NAT
+│   │   └── service/          # ALB, ECS, security groups
+│   └── envs/
+│       └── dev/              # calls the modules
+└── .github/workflows/        # pipelines</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Create the remote state bucket</h3>
+          <p>Terraform needs a safe, shared place to keep its state. Create the bucket once from <code>infra/bootstrap</code> using local state, then point every other configuration at it.</p>
+          <div class="code"><span class="name">infra/bootstrap/main.tf</span><pre><code>resource "aws_s3_bucket" "state" {
+  bucket = "YOUR-UNIQUE-NAME-tfstate"
+}
+
+resource "aws_s3_bucket_versioning" "state" {
+  bucket = aws_s3_bucket.state.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "state" {
+  bucket                  = aws_s3_bucket.state.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}</code></pre></div>
+          <div class="code"><span class="name">infra/envs/dev/backend.tf</span><pre><code>terraform {
+  backend "s3" {
+    bucket       = "YOUR-UNIQUE-NAME-tfstate"
+    key          = "dev/terraform.tfstate"
+    region       = "ap-south-1"
+    use_lockfile = true   # S3-native locking (Terraform 1.10+)
+  }
+}</code></pre></div>
+          <p class="note">On older Terraform versions, use a DynamoDB table for locking with the <code>dynamodb_table</code> argument instead of <code>use_lockfile</code>.</p>
+        </li>
+
+        <li class="step">
+          <h3>Write the network module</h3>
+          <p>Create the VPC, two public subnets, two private app subnets, an internet gateway, and route tables. Use <code>cidrsubnet()</code> so the addressing plan stays readable.</p>
+          <div class="code"><span class="name">infra/modules/network/main.tf</span><pre><code>data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  tags = { Name = "${var.project}-vpc" }
+}
+
+resource "aws_subnet" "public" {
+  count                   = 2
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = true
+  tags = { Name = "${var.project}-public-${count.index}" }
+}
+
+resource "aws_subnet" "private_app" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index + 10)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  tags = { Name = "${var.project}-private-app-${count.index}" }
+}
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Add NAT and private routing</h3>
+          <p>Private subnets need a default route to a NAT gateway for outbound access. The diagram shows one per availability zone, which is the resilient setup. For a low-cost lab, start with one NAT gateway shared by both zones and note the trade-off in your README.</p>
+          <div class="code"><span class="name">infra/modules/network/nat.tf</span><pre><code>resource "aws_eip" "nat" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+  depends_on    = [aws_internet_gateway.igw]
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+}
+
+resource "aws_route_table_association" "private_app" {
+  count          = 2
+  subnet_id      = aws_subnet.private_app[count.index].id
+  route_table_id = aws_route_table.private.id
+}</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Create the security groups, load balancer, and service</h3>
+          <p>In <code>modules/service</code>, define two security groups and chain them: the load balancer accepts web traffic from the internet, and the app accepts traffic only from the load balancer's security group. Then add an ALB, a target group, an ECS cluster, a task definition, and an ECS service on Fargate in the private subnets.</p>
+          <div class="code"><span class="name">infra/modules/service/security.tf</span><pre><code>resource "aws_security_group" "alb" {
+  name   = "${var.project}-alb"
+  vpc_id = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "app" {
+  name   = "${var.project}-app"
+  vpc_id = var.vpc_id
+
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}</code></pre></div>
+          <p>Set <code>assign_public_ip = false</code> on the ECS service's network configuration so tasks stay private. Start with HTTP on port 80; add HTTPS with ACM and Route 53 as an extension.</p>
+        </li>
+
+        <li class="step">
+          <h3>Containerize a small app</h3>
+          <p>Any small web app with a <code>/health</code> endpoint works. Point the target group's health check at it.</p>
+          <div class="code"><span class="name">app/Dockerfile</span><pre><code>FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8080
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]</code></pre></div>
+          <p>Create an ECR repository in Terraform and push a first image manually so the ECS service has something to run before the pipeline takes over.</p>
+        </li>
+
+        <li class="step">
+          <h3>Give GitHub Actions access without long-lived keys</h3>
+          <p>Use OpenID Connect so the pipeline requests short-lived credentials. In IAM, add an identity provider for <code>token.actions.githubusercontent.com</code>, then create a role with this trust policy. Grant the role only the permissions the pipeline needs, not administrator access, and store its ARN as the repository secret <code>AWS_ROLE_ARN</code>.</p>
+          <div class="code"><span class="name">trust-policy.json</span><pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+      },
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:YOUR_USER/YOUR_REPO:*"
+      }
+    }
+  }]
+}</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Build the infrastructure pipeline</h3>
+          <p>On pull requests the workflow checks formatting, validates, and plans. On merge to <code>main</code> it applies the saved plan. Add a required reviewer through a GitHub Environment if you want a manual approval before apply.</p>
+          <div class="code"><span class="name">.github/workflows/infra.yml</span><pre><code>name: infra
+on:
+  pull_request:
+    paths: ["infra/**"]
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/envs/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+      - run: terraform init
+      - run: terraform validate
+      - run: terraform plan -out=tfplan
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Build the application pipeline</h3>
+          <p>On every change under <code>app/</code>, build the image, push it to ECR, and tell ECS to roll out a new deployment. This version pushes both a commit-SHA tag and <code>latest</code> and has the task definition use <code>latest</code>, which keeps the first version simple. Using the SHA tag in the task definition is a good upgrade later.</p>
+          <div class="code"><span class="name">.github/workflows/app.yml</span><pre><code>name: app
+on:
+  push:
+    branches: [main]
+    paths: ["app/**"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push
+        run: |
+          REPO=${{ steps.ecr.outputs.registry }}/devops-demo
+          docker build -t $REPO:${{ github.sha }} -t $REPO:latest app/
+          docker push $REPO --all-tags
+      - name: Roll out
+        run: |
+          aws ecs update-service \
+            --cluster devops-demo \
+            --service devops-demo \
+            --force-new-deployment</code></pre></div>
+        </li>
+
+        <li class="step">
+          <h3>Add observability</h3>
+          <p>Turn on VPC Flow Logs so you can see accepted and rejected traffic, and add CloudWatch alarms for the load balancer's 5xx count and unhealthy host count, notifying an SNS topic. You also need a log group and an IAM role that lets flow logs write to it.</p>
+          <div class="code"><span class="name">infra/modules/network/flowlogs.tf</span><pre><code>resource "aws_cloudwatch_log_group" "flow" {
+  name              = "/vpc/${var.project}/flow-logs"
+  retention_in_days = 7
+}
+
+resource "aws_flow_log" "vpc" {
+  vpc_id          = aws_vpc.main.id
+  traffic_type    = "ALL"
+  log_destination = aws_cloudwatch_log_group.flow.arn
+  iam_role_arn    = aws_iam_role.flow.arn   # role trusted by vpc-flow-logs.amazonaws.com
+}</code></pre></div>
+        </li>
+
+      </ol>
+    </section>
+
+    <section id="verify" aria-labelledby="verify-h">
+      <h2 id="verify-h">Verify it works</h2>
+      <ul class="checks">
+        <li>Opening the load balancer's DNS name in a browser returns your app's response.</li>
+        <li>Running a second <code>terraform plan</code> shows no changes. The code and the real infrastructure agree.</li>
+        <li>The ECS tasks have no public IP, and you cannot reach port 8080 on them directly from the internet.</li>
+        <li>From a task, outbound requests succeed. Temporarily removing the private default route makes them fail, and restoring it fixes them.</li>
+        <li>Pushing a change under <code>app/</code> produces a new image in ECR and a new ECS deployment without any manual steps.</li>
+        <li>A pull request that breaks formatting (<code>terraform fmt</code>) fails the pipeline.</li>
+        <li>In CloudWatch Logs Insights, you can find rejected connections in the flow logs, for example by filtering on <code>action = "REJECT"</code>.</li>
+      </ul>
+    </section>
+
+    <section id="cleanup" aria-labelledby="cleanup-h">
+      <h2 id="cleanup-h">Clean up and cost</h2>
+      <p>NAT gateways and load balancers charge for every hour they exist, even with no traffic. Treat the environment as disposable.</p>
+      <ul>
+        <li>Run <code>terraform destroy</code> in <code>infra/envs/dev</code> at the end of each session, and recreate it from the pipeline next time. That doubles as a good test of your code.</li>
+        <li>Delete images in ECR and, last of all, the state bucket in <code>bootstrap</code>.</li>
+        <li>Keep the AWS Budgets alert active and check the Billing console after your first week.</li>
+      </ul>
+    </section>
+
+    <section><h2>Stretch goals</h2><ul><li>Add HTTPS: request a certificate in ACM, add an HTTPS listener, redirect HTTP, and manage DNS in Route 53.</li><li>Create a second environment (<code>envs/prod</code>) that reuses the same modules, with an approval step between dev and prod.</li><li>Add <code>tflint</code> and a scanner such as Checkov to the pull request workflow so insecure infrastructure fails before merge.</li><li>Replace Fargate with Kubernetes (Project 4).</li></ul></section><p class="next">Next project: <a href="#p2">2. Config backup and compliance</a></p></section><section class="project" id="p2" aria-labelledby="p2-h1"><header><h1 id="p2-h1" tabindex="-1">Network config backup and compliance checker</h1><p class="lede">Automatically pull running configs from network devices, keep every version, and flag any device that drifts from your baseline. This is the closest project to a networking job, so it is the easiest to explain in an interview.</p><dl class="facts"><div><dt>Level</dt><dd>Beginner</dd></div><div><dt>Time</dt><dd>1 to 2 weekends</dd></div><div><dt>Skills practiced</dt><dd>Python, Netmiko, YAML, boto3, S3, GitHub Actions</dd></div><div><dt>Cost</dt><dd>Near zero. The lab runs locally and S3 storage is a few cents.</dd></div></dl></header><section><h2>Architecture</h2><p>A scheduled workflow connects to each device, saves its config to a versioned S3 bucket, and compares it with rules kept in Git. Any violation raises an alert.</p><div class="diagram" data-spec="p2"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>A scheduled GitHub Actions workflow starts the backup job.</li><li>The job connects to each device over SSH with Netmiko and runs the platform's show running-config command.</li><li>Each config is uploaded to a versioned S3 bucket, so every change is kept as a version.</li><li>The compliance checker compares the latest config to the required and forbidden lines in <code>baseline.yaml</code>.</li><li>If any device breaks a rule, the run fails and posts an alert to Slack.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Prepare devices to test against</h3><p>You need devices reachable over SSH. Good options: the Cisco DevNet always-on sandbox, a containerlab or EVE-NG or GNS3 lab, or spare lab gear. Create a read-only user for the backup job.</p><p class="note">If the devices sit on a private network, GitHub-hosted runners cannot reach them. Use a self-hosted runner inside that network, or test against a publicly reachable sandbox.</p></li><li class="step"><h3>Describe your inventory in YAML</h3><div class="code"><span class="name">inventory.yaml</span><pre><code>devices:
+  - name: edge-r1
+    host: 192.0.2.11
+    device_type: cisco_xe
+  - name: edge-r2
+    host: 192.0.2.12
+    device_type: cisco_ios</code></pre></div><p>Keep credentials out of this file. The script reads them from environment variables.</p></li><li class="step"><h3>Write the backup script</h3><div class="code"><span class="name">backup.py</span><pre><code>import os
+
+import boto3
+import yaml
+from netmiko import ConnectHandler
+
+BUCKET = os.environ[&quot;CONFIG_BUCKET&quot;]
+s3 = boto3.client(&quot;s3&quot;)
+
+
+def fetch_config(device):
+    conn = ConnectHandler(
+        device_type=device[&quot;device_type&quot;],
+        host=device[&quot;host&quot;],
+        username=os.environ[&quot;NET_USER&quot;],
+        password=os.environ[&quot;NET_PASS&quot;],
+    )
+    config = conn.send_command(&quot;show running-config&quot;)
+    conn.disconnect()
+    return config
+
+
+def main():
+    with open(&quot;inventory.yaml&quot;) as f:
+        devices = yaml.safe_load(f)[&quot;devices&quot;]
+    for d in devices:
+        try:
+            config = fetch_config(d)
+        except Exception as exc:
+            print(f&quot;FAILED {d[&#x27;name&#x27;]}: {exc}&quot;)
+            continue
+        # Same key every run: S3 versioning keeps the history.
+        s3.put_object(
+            Bucket=BUCKET,
+            Key=f&quot;configs/{d[&#x27;name&#x27;]}/running-config.txt&quot;,
+            Body=config.encode(),
+        )
+        print(f&quot;saved {d[&#x27;name&#x27;]}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre></div></li><li class="step"><h3>Create a versioned bucket</h3><div class="code"><span class="name">bucket.tf</span><pre><code>resource &quot;aws_s3_bucket&quot; &quot;configs&quot; {
+  bucket = &quot;YOUR-UNIQUE-NAME-net-configs&quot;
+}
+
+resource &quot;aws_s3_bucket_versioning&quot; &quot;configs&quot; {
+  bucket = aws_s3_bucket.configs.id
+  versioning_configuration {
+    status = &quot;Enabled&quot;
+  }
+}
+
+resource &quot;aws_s3_bucket_public_access_block&quot; &quot;configs&quot; {
+  bucket                  = aws_s3_bucket.configs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}</code></pre></div></li><li class="step"><h3>Define the baseline and the checker</h3><p>List lines that must be present and lines that must never appear. Start with three or four rules you would actually enforce.</p><div class="code"><span class="name">baseline.yaml</span><pre><code>required:
+  - &quot;service password-encryption&quot;
+  - &quot;ntp server 192.0.2.50&quot;
+  - &quot;logging host 192.0.2.60&quot;
+forbidden:
+  - &quot;transport input telnet&quot;
+  - &quot;ip http server&quot;</code></pre></div><div class="code"><span class="name">compliance.py</span><pre><code>import os
+
+import boto3
+import yaml
+
+s3 = boto3.client(&quot;s3&quot;)
+BUCKET = os.environ[&quot;CONFIG_BUCKET&quot;]
+
+
+def config_lines(device):
+    obj = s3.get_object(Bucket=BUCKET, Key=f&quot;configs/{device}/running-config.txt&quot;)
+    return {line.strip() for line in obj[&quot;Body&quot;].read().decode().splitlines()}
+
+
+def check(device, baseline):
+    cfg = config_lines(device)
+    problems = [f&quot;missing: {r}&quot; for r in baseline[&quot;required&quot;] if r not in cfg]
+    problems += [f&quot;forbidden: {r}&quot; for r in baseline[&quot;forbidden&quot;] if r in cfg]
+    return problems
+
+
+if __name__ == &quot;__main__&quot;:
+    baseline = yaml.safe_load(open(&quot;baseline.yaml&quot;))
+    inventory = yaml.safe_load(open(&quot;inventory.yaml&quot;))[&quot;devices&quot;]
+    failed = False
+    for d in inventory:
+        problems = check(d[&quot;name&quot;], baseline)
+        if problems:
+            failed = True
+            print(f&quot;{d[&#x27;name&#x27;]}: &quot; + &quot;; &quot;.join(problems))
+    raise SystemExit(1 if failed else 0)</code></pre></div><p class="note">This is exact-line matching, which is deliberately simple. Indentation is ignored and <code>no ip http server</code> does not match <code>ip http server</code>.</p></li><li class="step"><h3>Schedule it and alert on failure</h3><p>Create the AWS role for GitHub with OIDC as in Project 1, step 7, then add the workflow. A failed compliance run triggers the Slack message.</p><div class="code"><span class="name">.github/workflows/config-backup.yml</span><pre><code>name: config-backup
+on:
+  schedule:
+    - cron: &quot;0 */6 * * *&quot;
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  backup-and-check:
+    runs-on: ubuntu-latest   # use a self-hosted runner for private devices
+    env:
+      CONFIG_BUCKET: YOUR-UNIQUE-NAME-net-configs
+      NET_USER: ${{ secrets.NET_USER }}
+      NET_PASS: ${{ secrets.NET_PASS }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+      - run: pip install netmiko boto3 pyyaml
+      - run: python backup.py
+      - run: python compliance.py
+      - name: Alert on drift
+        if: failure()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST -H &#x27;Content-type: application/json&#x27; \
+            --data &#x27;{&quot;text&quot;:&quot;Config compliance check failed. Open the workflow run for details.&quot;}&#x27; \
+            &quot;$SLACK_WEBHOOK&quot;</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>Running the workflow manually creates one object per device in S3.</li><li>Changing a device (for example, enabling telnet) makes the next run fail and posts a Slack alert.</li><li>Reverting the change makes the next run pass, and the bucket's version list shows both versions of that config.</li><li>No passwords or webhook URLs appear anywhere in the repository.</li></ul></section><section><h2>Clean up and cost</h2><p>Empty the bucket (including all versions) before destroying it, and disable the scheduled workflow when you are not using it.</p></section><section><h2>Stretch goals</h2><ul><li>Run the backups in parallel with Nornir instead of a plain loop.</li><li>Include a diff of the latest and previous versions in the alert, using <code>difflib</code>.</li><li>Commit configs to a Git repository instead of S3 and open a pull request when something changes.</li><li>Render the intended config from Jinja2 templates and compare it with the real one (this leads into Project 6).</li></ul></section><p class="next">Next project: <a href="#p3">3. Transit Gateway hub-and-spoke</a></p></section><section class="project" id="p3" aria-labelledby="p3-h1"><header><h1 id="p3-h1" tabindex="-1">Hub-and-spoke network with Transit Gateway</h1><p class="lede">Connect several VPCs and a simulated on-premises site through one Transit Gateway, and control exactly who can talk to whom with separate route tables. This is network segmentation, expressed as Terraform.</p><dl class="facts"><div><dt>Level</dt><dd>Intermediate</dd></div><div><dt>Time</dt><dd>2 weekends</dd></div><div><dt>Skills practiced</dt><dd>Transit Gateway, route tables, IPsec VPN, Terraform modules</dd></div><div><dt>Cost</dt><dd>Moderate. Transit Gateway attachments and VPN connections bill by the hour, so destroy after each session.</dd></div></dl></header><section><h2>Architecture</h2><p>Spoke VPCs attach to a central Transit Gateway. Separate TGW route tables make spokes reach shared services and on-premises, but never each other.</p><div class="diagram" data-spec="p3"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>Each VPC attaches to the Transit Gateway through subnets you choose.</li><li>An association decides which TGW route table an attachment uses for its outgoing traffic. A propagation decides whose routes appear in a table.</li><li>The spokes table learns routes only from shared services and the VPN, so spoke A has no route to spoke B and that traffic is dropped.</li><li>The shared table learns all VPCs, so shared services and on-premises can reach every spoke.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Plan non-overlapping address space</h3><p>Write the plan before any code. Overlapping CIDRs are the most common reason hub-and-spoke builds fail.</p><table class="tbl"><thead><tr><th>Network</th><th>CIDR</th><th>Role</th></tr></thead><tbody><tr><td>Shared services</td><td><code>10.0.0.0/16</code></td><td>DNS, tooling, bastion</td></tr><tr><td>Spoke A</td><td><code>10.1.0.0/16</code></td><td>Workload</td></tr><tr><td>Spoke B</td><td><code>10.2.0.0/16</code></td><td>Workload</td></tr><tr><td>Simulated on-prem</td><td><code>10.100.0.0/16</code></td><td>Stands in for a data center</td></tr></tbody></table></li><li class="step"><h3>Reuse the network module from Project 1</h3><p>Change the module so the VPC CIDR is a variable (<code>cidr_block = var.cidr</code>), and make it output <code>vpc_id</code>, <code>private_subnet_ids</code>, and the private route table ID. Then create four VPCs.</p><div class="code"><span class="name">infra/envs/hub/vpcs.tf</span><pre><code>module &quot;shared&quot; {
+  source  = &quot;../../modules/network&quot;
+  project = &quot;shared&quot;
+  cidr    = &quot;10.0.0.0/16&quot;
+}
+
+module &quot;spoke_a&quot; {
+  source  = &quot;../../modules/network&quot;
+  project = &quot;spoke-a&quot;
+  cidr    = &quot;10.1.0.0/16&quot;
+}
+
+module &quot;spoke_b&quot; {
+  source  = &quot;../../modules/network&quot;
+  project = &quot;spoke-b&quot;
+  cidr    = &quot;10.2.0.0/16&quot;
+}
+
+module &quot;onprem&quot; {
+  source  = &quot;../../modules/network&quot;
+  project = &quot;onprem&quot;
+  cidr    = &quot;10.100.0.0/16&quot;
+}</code></pre></div></li><li class="step"><h3>Create the Transit Gateway without default route tables</h3><p>Turning off the default association and propagation is what gives you control. Otherwise every attachment lands in one table and can reach every other.</p><div class="code"><span class="name">infra/envs/hub/tgw.tf</span><pre><code>resource &quot;aws_ec2_transit_gateway&quot; &quot;hub&quot; {
+  description                     = &quot;hub&quot;
+  amazon_side_asn                 = 64512
+  default_route_table_association = &quot;disable&quot;
+  default_route_table_propagation = &quot;disable&quot;
+}
+
+locals {
+  attachments = {
+    shared  = module.shared
+    spoke_a = module.spoke_a
+    spoke_b = module.spoke_b
+  }
+}
+
+resource &quot;aws_ec2_transit_gateway_vpc_attachment&quot; &quot;vpc&quot; {
+  for_each           = local.attachments
+  transit_gateway_id = aws_ec2_transit_gateway.hub.id
+  vpc_id             = each.value.vpc_id
+  subnet_ids         = each.value.private_subnet_ids
+
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+}</code></pre></div></li><li class="step"><h3>Build the two TGW route tables</h3><p>Associate each spoke with the <code>spokes</code> table and the shared VPC with the <code>shared</code> table. Then decide who propagates where.</p><div class="code"><span class="name">infra/envs/hub/routing.tf</span><pre><code>resource &quot;aws_ec2_transit_gateway_route_table&quot; &quot;spokes&quot; {
+  transit_gateway_id = aws_ec2_transit_gateway.hub.id
+}
+
+resource &quot;aws_ec2_transit_gateway_route_table&quot; &quot;shared&quot; {
+  transit_gateway_id = aws_ec2_transit_gateway.hub.id
+}
+
+# Associations: which table an attachment uses for outgoing traffic
+resource &quot;aws_ec2_transit_gateway_route_table_association&quot; &quot;spoke_a&quot; {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.vpc[&quot;spoke_a&quot;].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.id
+}
+
+resource &quot;aws_ec2_transit_gateway_route_table_association&quot; &quot;shared&quot; {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.vpc[&quot;shared&quot;].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.shared.id
+}
+
+# Propagations: whose routes show up in each table
+resource &quot;aws_ec2_transit_gateway_route_table_propagation&quot; &quot;shared_into_spokes&quot; {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.vpc[&quot;shared&quot;].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.id
+}
+
+resource &quot;aws_ec2_transit_gateway_route_table_propagation&quot; &quot;spoke_a_into_shared&quot; {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.vpc[&quot;spoke_a&quot;].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.shared.id
+}</code></pre></div><p>Repeat the spoke A association and propagation for spoke B.</p></li><li class="step"><h3>Point each VPC at the Transit Gateway</h3><p>Each VPC's route table needs a route for the other networks. A summary route for <code>10.0.0.0/8</code> keeps it short, and the more specific local route still wins inside the VPC. Traffic for a network the TGW has no route to is dropped, which is how spoke B stays unreachable from spoke A.</p><div class="code"><span class="name">infra/envs/hub/vpc-routes.tf</span><pre><code>resource &quot;aws_route&quot; &quot;spoke_a_to_tgw&quot; {
+  route_table_id         = module.spoke_a.private_route_table_id
+  destination_cidr_block = &quot;10.0.0.0/8&quot;
+  transit_gateway_id     = aws_ec2_transit_gateway.hub.id
+  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.vpc]
+}</code></pre></div><p>Add the same for spoke B and the shared VPC.</p></li><li class="step"><h3>Connect the simulated on-premises site over VPN</h3><p>Run a small EC2 instance with strongSwan in a public subnet of the on-prem VPC, give it an Elastic IP, and disable its source/destination check so it can forward traffic. Create the customer gateway and a VPN connection attached to the Transit Gateway. With static routing you add the TGW routes yourself.</p><div class="code"><span class="name">infra/envs/hub/vpn.tf</span><pre><code>resource &quot;aws_customer_gateway&quot; &quot;onprem&quot; {
+  bgp_asn    = 65100
+  ip_address = aws_eip.onprem_router.public_ip
+  type       = &quot;ipsec.1&quot;
+}
+
+resource &quot;aws_vpn_connection&quot; &quot;onprem&quot; {
+  customer_gateway_id = aws_customer_gateway.onprem.id
+  transit_gateway_id  = aws_ec2_transit_gateway.hub.id
+  type                = aws_customer_gateway.onprem.type
+  static_routes_only  = true
+}
+
+resource &quot;aws_ec2_transit_gateway_route_table_association&quot; &quot;onprem&quot; {
+  transit_gateway_attachment_id  = aws_vpn_connection.onprem.transit_gateway_attachment_id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.shared.id
+}
+
+resource &quot;aws_ec2_transit_gateway_route&quot; &quot;onprem_in_spokes&quot; {
+  destination_cidr_block         = &quot;10.100.0.0/16&quot;
+  transit_gateway_attachment_id  = aws_vpn_connection.onprem.transit_gateway_attachment_id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spokes.id
+}
+
+resource &quot;aws_ec2_transit_gateway_route&quot; &quot;onprem_in_shared&quot; {
+  destination_cidr_block         = &quot;10.100.0.0/16&quot;
+  transit_gateway_attachment_id  = aws_vpn_connection.onprem.transit_gateway_attachment_id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.shared.id
+}</code></pre></div><p>In the VPC console, download the VPN configuration (choose the Strongswan vendor if listed, otherwise Generic) and apply it on the router instance. In the on-prem VPC, add a route for <code>10.0.0.0/8</code> pointing at the router instance's network interface.</p></li><li class="step"><h3>Prove the segmentation</h3><p>Launch a small instance in each VPC with Systems Manager access and test with ping or curl. Then confirm the design with Reachability Analyzer, which checks paths without sending packets.</p><div class="code"><span class="name">terminal</span><pre><code>aws ec2 create-network-insights-path \
+  --source eni-SPOKE_A_INSTANCE \
+  --destination eni-SPOKE_B_INSTANCE \
+  --protocol tcp --destination-port 22
+
+aws ec2 start-network-insights-analysis \
+  --network-insights-path-id nip-0123456789abcdef0</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>An instance in spoke A can reach shared services and the on-prem network.</li><li>An instance in spoke A cannot reach spoke B, and Reachability Analyzer reports the path as not reachable.</li><li>The VPN tunnel shows as up in the console and traffic from on-prem reaches the shared VPC.</li><li>Changing a propagation in Terraform and applying it changes reachability the way you predicted before running it.</li></ul></section><section><h2>Clean up and cost</h2><p>Transit Gateway attachments and the VPN connection charge per hour plus data processing. Run <code>terraform destroy</code> after each session.</p></section><section><h2>Stretch goals</h2><ul><li>Add an inspection VPC with a firewall and enable appliance mode so traffic is inspected in both directions.</li><li>Switch the VPN to BGP with FRR so routes are learned instead of configured by hand.</li><li>Share the Transit Gateway across accounts with AWS Resource Access Manager.</li><li>Use AWS IPAM to allocate the CIDRs instead of choosing them manually.</li></ul></section><p class="next">Next project: <a href="#p4">4. Kubernetes networking on EKS</a></p></section><section class="project" id="p4" aria-labelledby="p4-h1"><header><h1 id="p4-h1" tabindex="-1">Kubernetes networking on EKS</h1><p class="lede">Run a two-tier app on EKS, expose it through an Application Load Balancer created from a Kubernetes Ingress, manage DNS automatically, and lock down pod-to-pod traffic with network policies.</p><dl class="facts"><div><dt>Level</dt><dd>Intermediate</dd></div><div><dt>Time</dt><dd>2 to 3 weekends</dd></div><div><dt>Skills practiced</dt><dd>EKS, Helm, Ingress, ExternalDNS, Kubernetes NetworkPolicy</dd></div><div><dt>Cost</dt><dd>Moderate. The EKS control plane, nodes, and load balancer all bill hourly.</dd></div></dl></header><section><h2>Architecture</h2><p>A controller inside the cluster creates the load balancer and DNS records from Kubernetes objects. Network policies then limit which pods may talk to each other.</p><div class="diagram" data-spec="p4"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>A user resolves the app hostname in Route 53 and reaches the ALB.</li><li>The AWS Load Balancer Controller created that ALB from your Ingress, and it sends traffic straight to pod IPs.</li><li>ExternalDNS watches the Ingress and writes the Route 53 record for you.</li><li>A default-deny NetworkPolicy blocks all pod traffic, and explicit policies allow only ALB to frontend and frontend to api.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Create the cluster with eksctl</h3><p>This config enables the OIDC provider (needed for IAM roles for service accounts) and turns on network policy support in the VPC CNI add-on.</p><div class="code"><span class="name">cluster.yaml</span><pre><code>apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: demo
+  region: ap-south-1
+iam:
+  withOIDC: true
+addons:
+  - name: vpc-cni
+    configurationValues: &#x27;{&quot;enableNetworkPolicy&quot;: &quot;true&quot;}&#x27;
+managedNodeGroups:
+  - name: ng-1
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 3</code></pre></div><div class="code"><span class="name">terminal</span><pre><code>eksctl create cluster -f cluster.yaml
+kubectl get nodes</code></pre></div><p class="note">Cluster creation takes about 15 minutes. You can later move this to Terraform with the community EKS module.</p></li><li class="step"><h3>Install the AWS Load Balancer Controller</h3><p>Create its IAM policy and service account, then install the Helm chart. Check the controller's documentation for the current policy file, since it changes between versions.</p><div class="code"><span class="name">terminal</span><pre><code>curl -o iam_policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+
+aws iam create-policy \
+  --policy-name AWSLoadBalancerControllerIAMPolicy \
+  --policy-document file://iam_policy.json
+
+eksctl create iamserviceaccount \
+  --cluster demo --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --attach-policy-arn arn:aws:iam::ACCOUNT_ID:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=demo \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller</code></pre></div><p class="note">If you use your own VPC instead of the one eksctl creates, tag public subnets with <code>kubernetes.io/role/elb=1</code> and private subnets with <code>kubernetes.io/role/internal-elb=1</code>.</p></li><li class="step"><h3>Deploy a two-tier app</h3><div class="code"><span class="name">app.yaml</span><pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: frontend}
+  template:
+    metadata:
+      labels: {app: frontend}
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:stable
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: demo
+spec:
+  selector: {app: frontend}
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: api}
+  template:
+    metadata:
+      labels: {app: api}
+    spec:
+      containers:
+        - name: api
+          image: hashicorp/http-echo:1.0
+          args: [&quot;-text=hello from api&quot;, &quot;-listen=:5678&quot;]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: demo
+spec:
+  selector: {app: api}
+  ports:
+    - port: 80
+      targetPort: 5678</code></pre></div></li><li class="step"><h3>Expose the frontend with an Ingress</h3><div class="code"><span class="name">ingress.yaml</span><pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend
+  namespace: demo
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80</code></pre></div><div class="code"><span class="name">terminal</span><pre><code>kubectl apply -f app.yaml -f ingress.yaml
+kubectl get ingress -n demo   # wait a few minutes for the ADDRESS column</code></pre></div></li><li class="step"><h3>Automate DNS with ExternalDNS (optional)</h3><p>This needs a hosted zone in Route 53. Create an IAM role for the <code>external-dns</code> service account with permission to change records in that zone, then install the chart. Without a domain, skip this step and use the ALB's DNS name.</p><div class="code"><span class="name">terminal</span><pre><code>helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
+helm install external-dns external-dns/external-dns -n kube-system \
+  --set provider.name=aws \
+  --set &quot;domainFilters[0]=example.com&quot; \
+  --set policy=upsert-only \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=external-dns</code></pre></div><p>Then add the annotation <code>external-dns.alpha.kubernetes.io/hostname: app.example.com</code> to the Ingress.</p></li><li class="step"><h3>Lock down traffic with network policies</h3><p>Start from deny-all, then allow only the flows you intend. The ALB sends traffic from addresses inside your VPC, so the frontend policy allows your VPC CIDR.</p><div class="code"><span class="name">policies.yaml</span><pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: demo
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-alb-to-frontend
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels: {app: frontend}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16   # replace with your VPC CIDR
+      ports:
+        - port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-api
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels: {app: api}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app: frontend}
+      ports:
+        - port: 5678</code></pre></div></li><li class="step"><h3>Test the policies</h3><p>Start throwaway pods with different labels. The one labeled like the frontend should get an answer, and the other should time out.</p><div class="code"><span class="name">terminal</span><pre><code>kubectl -n demo run t1 --rm -it --image=curlimages/curl --labels app=frontend \
+  -- curl -s --max-time 3 api
+
+kubectl -n demo run t2 --rm -it --image=curlimages/curl --labels app=other \
+  -- curl -s --max-time 3 api</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>Opening the ALB address (or your hostname) in a browser shows the nginx welcome page.</li><li>The test pod labeled <code>app=frontend</code> gets <code>hello from api</code>, and the pod labeled <code>app=other</code> times out.</li><li>Deleting the Ingress removes the ALB, and recreating it brings it back with no console clicks.</li><li>With ExternalDNS enabled, the DNS record appears in Route 53 without you creating it.</li></ul></section><section><h2>Clean up and cost</h2><p>Delete the Ingress first so the controller removes the ALB, then run <code>eksctl delete cluster -f cluster.yaml</code>. A load balancer left behind keeps billing and can block VPC deletion.</p></section><section><h2>Stretch goals</h2><ul><li>Define the whole cluster in Terraform and deploy it from a pipeline.</li><li>Replace the managed node group with Karpenter for autoscaling.</li><li>Switch the CNI to Cilium and compare its network policies and observability with the VPC CNI.</li><li>Deliver manifests with Argo CD instead of <code>kubectl apply</code>.</li></ul></section><p class="next">Next project: <a href="#p5">5. Network monitoring and alerts</a></p></section><section class="project" id="p5" aria-labelledby="p5-h1"><header><h1 id="p5-h1" tabindex="-1">Network monitoring and alerting</h1><p class="lede">Turn VPC Flow Logs and service metrics into alarms, dashboards, and answers. You will detect spikes in rejected traffic, watch NAT and load balancer health, and investigate with queries.</p><dl class="facts"><div><dt>Level</dt><dd>Intermediate</dd></div><div><dt>Time</dt><dd>1 to 2 weekends</dd></div><div><dt>Skills practiced</dt><dd>VPC Flow Logs, CloudWatch, SNS, Logs Insights, Grafana</dd></div><div><dt>Cost</dt><dd>Low. Keep log retention short and delete the stack afterward.</dd></div></dl></header><section><h2>Architecture</h2><p>Flow logs feed two paths: CloudWatch Logs for alarms and quick queries, and S3 for cheap long-term storage. Service metrics go to Grafana.</p><div class="diagram" data-spec="p5"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>Flow logs from the VPC land in a CloudWatch log group and in an S3 bucket.</li><li>A metric filter counts REJECT records. A CloudWatch alarm fires when the count spikes and notifies an SNS topic.</li><li>SNS delivers the alert by email, or to Slack through a chat integration.</li><li>CloudWatch metrics for NAT gateways, load balancers, and VPN are charted in Grafana.</li><li>Optionally, query the archived flow logs in S3 with Athena.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Send flow logs to CloudWatch and S3</h3><p>Setting a 60-second aggregation interval gives you faster feedback while testing. The CloudWatch destination also needs an IAM role that the flow logs service can assume.</p><div class="code"><span class="name">flowlogs.tf</span><pre><code>resource &quot;aws_cloudwatch_log_group&quot; &quot;flow&quot; {
+  name              = &quot;/vpc/demo/flow-logs&quot;
+  retention_in_days = 7
+}
+
+resource &quot;aws_flow_log&quot; &quot;to_cloudwatch&quot; {
+  vpc_id                   = var.vpc_id
+  traffic_type             = &quot;ALL&quot;
+  max_aggregation_interval = 60
+  log_destination          = aws_cloudwatch_log_group.flow.arn
+  iam_role_arn             = aws_iam_role.flow.arn   # trusted by vpc-flow-logs.amazonaws.com
+}
+
+resource &quot;aws_flow_log&quot; &quot;to_s3&quot; {
+  vpc_id               = var.vpc_id
+  traffic_type         = &quot;ALL&quot;
+  log_destination_type = &quot;s3&quot;
+  log_destination      = aws_s3_bucket.flow_archive.arn
+}</code></pre></div></li><li class="step"><h3>Alert on rejected traffic</h3><p>A metric filter turns matching log lines into a metric, and an alarm watches it.</p><div class="code"><span class="name">alerts.tf</span><pre><code>resource &quot;aws_sns_topic&quot; &quot;alerts&quot; {
+  name = &quot;network-alerts&quot;
+}
+
+resource &quot;aws_sns_topic_subscription&quot; &quot;email&quot; {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = &quot;email&quot;
+  endpoint  = var.alert_email
+}
+
+resource &quot;aws_cloudwatch_log_metric_filter&quot; &quot;rejects&quot; {
+  name           = &quot;rejected-traffic&quot;
+  log_group_name = aws_cloudwatch_log_group.flow.name
+  pattern        = &quot;[version, account, eni, source, destination, srcport, destport, protocol, packets, bytes, windowstart, windowend, action=\&quot;REJECT\&quot;, flowlogstatus]&quot;
+
+  metric_transformation {
+    name      = &quot;RejectedFlows&quot;
+    namespace = &quot;Network&quot;
+    value     = &quot;1&quot;
+  }
+}
+
+resource &quot;aws_cloudwatch_metric_alarm&quot; &quot;reject_spike&quot; {
+  alarm_name          = &quot;rejected-traffic-spike&quot;
+  namespace           = &quot;Network&quot;
+  metric_name         = &quot;RejectedFlows&quot;
+  statistic           = &quot;Sum&quot;
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 500
+  comparison_operator = &quot;GreaterThanThreshold&quot;
+  treat_missing_data  = &quot;notBreaching&quot;
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+}</code></pre></div><p>Confirm the subscription from the email AWS sends, or the alarm has nowhere to go.</p></li><li class="step"><h3>Alarm on service health</h3><p>Add alarms for the things that hurt users. NAT port allocation errors mean outbound connections are failing.</p><div class="code"><span class="name">service-alarms.tf</span><pre><code>resource &quot;aws_cloudwatch_metric_alarm&quot; &quot;nat_port_alloc&quot; {
+  alarm_name          = &quot;nat-port-allocation-errors&quot;
+  namespace           = &quot;AWS/NATGateway&quot;
+  metric_name         = &quot;ErrorPortAllocation&quot;
+  dimensions          = { NatGatewayId = var.nat_gateway_id }
+  statistic           = &quot;Sum&quot;
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = &quot;GreaterThanThreshold&quot;
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+}</code></pre></div><p>Create similar alarms for the load balancer: <code>HTTPCode_ELB_5XX_Count</code>, <code>UnHealthyHostCount</code>, and <code>TargetResponseTime</code> at p95.</p></li><li class="step"><h3>Investigate with Logs Insights</h3><p>Alarms tell you something is wrong. Queries tell you what. Run these against the flow log group.</p><div class="code"><span class="name">Logs Insights: who is being rejected</span><pre><code>fields @timestamp, srcAddr, dstAddr, dstPort, action
+| filter action = &quot;REJECT&quot;
+| stats count(*) as attempts by srcAddr, dstPort
+| sort attempts desc
+| limit 20</code></pre></div><div class="code"><span class="name">Logs Insights: top talkers</span><pre><code>stats sum(bytes) as totalBytes by srcAddr, dstAddr
+| sort totalBytes desc
+| limit 10</code></pre></div></li><li class="step"><h3>Run Grafana for dashboards</h3><p>Grafana can read CloudWatch directly. For a local lab, mount a read-only AWS profile into the container, or use Amazon Managed Grafana instead.</p><div class="code"><span class="name">terminal</span><pre><code>docker run -d --name grafana -p 3000:3000 \
+  -v $HOME/.aws:/usr/share/grafana/.aws:ro \
+  -e AWS_PROFILE=your-readonly-profile \
+  grafana/grafana-oss</code></pre></div><p>Open <code>http://localhost:3000</code>, add a CloudWatch data source, and build panels for NAT <code>BytesOutToDestination</code>, ALB <code>RequestCount</code>, ALB p95 <code>TargetResponseTime</code>, and your custom <code>RejectedFlows</code> metric. Export the dashboard JSON and commit it to the repository.</p></li><li class="step"><h3>Generate traffic and watch the alarm fire</h3><p>From an instance in the VPC, repeatedly connect to a port that a security group blocks. Those attempts are logged as REJECT.</p><div class="code"><span class="name">terminal</span><pre><code>for i in $(seq 1 600); do nc -z -w1 10.0.10.25 9999; done</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>Flow log records appear in the log group within a couple of minutes.</li><li>The rejected-traffic test pushes the <code>RejectedFlows</code> metric above the threshold and you receive the email alert.</li><li>The Logs Insights query lists your test source and port at the top.</li><li>The Grafana dashboard shows live NAT and load balancer metrics and survives a container restart because the JSON is in Git.</li></ul></section><section><h2>Clean up and cost</h2><p>Delete the log groups and the archive bucket (including its objects) when you finish. Flow logs with <code>ALL</code> traffic on a busy VPC can become expensive.</p></section><section><h2>Stretch goals</h2><ul><li>Create an Athena table over the S3 archive with partition projection to query months of logs cheaply.</li><li>Send alerts to Slack with Amazon Q Developer in chat applications or a small Lambda that posts to a webhook.</li><li>Alarm on VPN tunnel state using the <code>TunnelState</code> metric in the <code>AWS/VPN</code> namespace (pairs well with Project 8).</li><li>Run Prometheus with the CloudWatch exporter and compare it with the Grafana CloudWatch data source.</li></ul></section><p class="next">Next project: <a href="#p6">6. NetDevOps pipeline</a></p></section><section class="project" id="p6" aria-labelledby="p6-h1"><header><h1 id="p6-h1" tabindex="-1">NetDevOps: network changes through a pipeline</h1><p class="lede">Treat network configuration like application code. Intent lives in Git, a pull request renders and validates the configs, and merging deploys them and runs post-checks.</p><dl class="facts"><div><dt>Level</dt><dd>Advanced</dd></div><div><dt>Time</dt><dd>3 to 4 weekends</dd></div><div><dt>Skills practiced</dt><dd>Ansible, Jinja2, Batfish, pytest, GitHub Actions, Git workflows</dd></div><div><dt>Cost</dt><dd>Free if you use a local lab and a self-hosted runner.</dd></div></dl></header><section><h2>Architecture</h2><p>Engineers edit YAML intent files. CI renders configs and checks them with Batfish before anything touches a device. Only merged changes are deployed.</p><div class="diagram" data-spec="p6"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>An engineer changes a YAML file (for example, adds an interface or a BGP neighbor) and opens a pull request.</li><li>CI lints the YAML, renders device configs from Jinja2 templates, and runs Batfish checks for undefined references and duplicate IPs.</li><li>After review, the merge to main starts the deployment job.</li><li>Ansible pushes the rendered configuration to the lab devices.</li><li>Post-deploy tests check that routing actually works. If they fail, revert the merge and the pipeline restores the previous state.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Set up the repository</h3><div class="code"><span class="name">layout</span><pre><code>netdevops/
+├── host_vars/              # per-device intent (YAML)
+├── templates/              # Jinja2 config templates
+├── inventory.yml           # Ansible inventory
+├── deploy.yml              # Ansible playbook
+├── render.py               # builds configs from intent
+├── tests/
+│   ├── batfish/            # pre-deploy checks
+│   └── post_checks/        # post-deploy checks
+└── .github/workflows/</code></pre></div></li><li class="step"><h3>Describe intent and write the template</h3><p>Keep data and syntax separate. The YAML says what you want, and the template knows how the platform expresses it.</p><div class="code"><span class="name">host_vars/r1.yml</span><pre><code>hostname: r1
+interfaces:
+  - name: Loopback0
+    ip: 10.255.0.1
+    mask: 255.255.255.255
+  - name: GigabitEthernet1
+    ip: 10.0.12.1
+    mask: 255.255.255.252
+bgp:
+  asn: 65001
+  neighbors:
+    - ip: 10.0.12.2
+      remote_as: 65002</code></pre></div><div class="code"><span class="name">templates/ios.j2</span><pre><code>hostname {{ hostname }}
+{% for i in interfaces %}
+interface {{ i.name }}
+ ip address {{ i.ip }} {{ i.mask }}
+ no shutdown
+{% endfor %}
+router bgp {{ bgp.asn }}
+{% for n in bgp.neighbors %}
+ neighbor {{ n.ip }} remote-as {{ n.remote_as }}
+{% endfor %}</code></pre></div></li><li class="step"><h3>Render the configs</h3><p>Batfish reads a snapshot folder with a <code>configs</code> directory, so render straight into that layout.</p><div class="code"><span class="name">render.py</span><pre><code>import pathlib
+
+import yaml
+from jinja2 import Environment, FileSystemLoader
+
+env = Environment(loader=FileSystemLoader(&quot;templates&quot;), trim_blocks=True, lstrip_blocks=True)
+out = pathlib.Path(&quot;build/snapshot/configs&quot;)
+out.mkdir(parents=True, exist_ok=True)
+
+for path in pathlib.Path(&quot;host_vars&quot;).glob(&quot;*.yml&quot;):
+    data = yaml.safe_load(path.read_text())
+    config = env.get_template(&quot;ios.j2&quot;).render(**data)
+    (out / f&quot;{data[&#x27;hostname&#x27;]}.cfg&quot;).write_text(config)
+    print(f&quot;rendered {data[&#x27;hostname&#x27;]}&quot;)</code></pre></div></li><li class="step"><h3>Validate before deploying with Batfish</h3><p>Batfish analyzes the configs offline, so mistakes are caught before any device sees them. Start the Batfish container locally, then run the test.</p><div class="code"><span class="name">terminal</span><pre><code>docker run -d --name batfish -p 9996:9996 batfish/allinone
+pip install pybatfish pytest</code></pre></div><div class="code"><span class="name">tests/batfish/test_snapshot.py</span><pre><code>from pybatfish.client.session import Session
+
+
+def test_network_is_consistent():
+    bf = Session(host=&quot;localhost&quot;)
+    bf.set_network(&quot;lab&quot;)
+    bf.init_snapshot(&quot;build/snapshot&quot;, name=&quot;candidate&quot;, overwrite=True)
+
+    undefined = bf.q.undefinedReferences().answer().frame()
+    assert undefined.empty, f&quot;Undefined references:\n{undefined}&quot;
+
+    duplicates = bf.q.ipOwners(duplicatesOnly=True).answer().frame()
+    assert duplicates.empty, f&quot;Duplicate IPs:\n{duplicates}&quot;</code></pre></div></li><li class="step"><h3>Deploy with Ansible</h3><p>Preview with check mode and a diff in the pull request, then apply for real after merge.</p><div class="code"><span class="name">inventory.yml</span><pre><code>all:
+  children:
+    routers:
+      hosts:
+        r1:
+          ansible_host: 192.0.2.11
+      vars:
+        ansible_connection: ansible.netcommon.network_cli
+        ansible_network_os: cisco.ios.ios
+        ansible_user: &quot;{{ lookup(&#x27;env&#x27;, &#x27;NET_USER&#x27;) }}&quot;
+        ansible_password: &quot;{{ lookup(&#x27;env&#x27;, &#x27;NET_PASS&#x27;) }}&quot;</code></pre></div><div class="code"><span class="name">deploy.yml</span><pre><code>- name: Push intended configuration
+  hosts: routers
+  gather_facts: false
+  tasks:
+    - name: Apply rendered config
+      cisco.ios.ios_config:
+        src: &quot;build/snapshot/configs/{{ inventory_hostname }}.cfg&quot;
+      register: result
+
+    - name: Show what changed
+      ansible.builtin.debug:
+        var: result.updates</code></pre></div><div class="code"><span class="name">terminal</span><pre><code>ansible-galaxy collection install cisco.ios ansible.netcommon
+ansible-playbook -i inventory.yml deploy.yml --check --diff</code></pre></div><p class="note"><code>ios_config</code> merges lines and does not remove extra ones. For deletions, add explicit <code>no</code> lines or look at config replace.</p></li><li class="step"><h3>Add the pipelines</h3><p>CI runs on pull requests and never touches devices. CD runs after merge on a self-hosted runner that can reach the lab.</p><div class="code"><span class="name">.github/workflows/ci.yml</span><pre><code>name: ci
+on:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      batfish:
+        image: batfish/allinone
+        ports:
+          - 9996:9996
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+      - run: pip install pyyaml jinja2 yamllint pybatfish pytest
+      - run: yamllint host_vars inventory.yml
+      - run: python render.py
+      - run: sleep 45   # give Batfish time to start
+      - run: pytest tests/batfish</code></pre></div><div class="code"><span class="name">.github/workflows/cd.yml</span><pre><code>name: cd
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # must be able to reach the lab network
+    environment: lab
+    env:
+      NET_USER: ${{ secrets.NET_USER }}
+      NET_PASS: ${{ secrets.NET_PASS }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyyaml jinja2 ansible-core pytest netmiko
+      - run: ansible-galaxy collection install cisco.ios ansible.netcommon
+      - run: python render.py
+      - run: ansible-playbook -i inventory.yml deploy.yml
+      - run: pytest tests/post_checks</code></pre></div></li><li class="step"><h3>Check the result after deploying</h3><p>Configs applying is not the goal. Working routing is. Test the behavior.</p><div class="code"><span class="name">tests/post_checks/test_routing.py</span><pre><code>import os
+
+from netmiko import ConnectHandler
+
+
+def run(host, command):
+    with ConnectHandler(
+        device_type=&quot;cisco_ios&quot;,
+        host=host,
+        username=os.environ[&quot;NET_USER&quot;],
+        password=os.environ[&quot;NET_PASS&quot;],
+    ) as conn:
+        return conn.send_command(command)
+
+
+def test_bgp_neighbor_is_up():
+    output = run(&quot;192.0.2.11&quot;, &quot;show ip bgp summary&quot;)
+    line = next(l for l in output.splitlines() if l.startswith(&quot;10.0.12.2&quot;))
+    assert line.split()[-1].isdigit()   # a prefix count means Established</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>A pull request that references a missing object or reuses an IP fails CI before any device is touched.</li><li>A valid pull request passes CI, and merging it changes the device configuration and passes the post-checks.</li><li>Reverting the merge commit restores the previous configuration on the next pipeline run.</li><li>No device credentials appear in the repository or the workflow logs.</li></ul></section><section><h2>Clean up and cost</h2><p>There is no cloud cost. Stop the Batfish container and lab nodes when you are done, and remove the self-hosted runner if it is no longer needed.</p></section><section><h2>Stretch goals</h2><ul><li>Use NetBox as the source of truth and generate the host_vars files from it.</li><li>Test changes on virtual devices in containerlab inside CI before they reach the real lab.</li><li>Switch to config replace with commit-confirm so a bad change rolls itself back.</li><li>Write richer post-checks with pyATS and Genie parsers.</li></ul></section><p class="next">Next project: <a href="#p7">7. Self-healing infrastructure</a></p></section><section class="project" id="p7" aria-labelledby="p7-h1"><header><h1 id="p7-h1" tabindex="-1">Self-healing infrastructure</h1><p class="lede">Detect an unhealthy instance and fix it automatically: first try a cheap repair, and if that fails, replace the instance. Every action is reported to the on-call team.</p><dl class="facts"><div><dt>Level</dt><dd>Advanced</dd></div><div><dt>Time</dt><dd>2 weekends</dd></div><div><dt>Skills practiced</dt><dd>Auto Scaling, CloudWatch, EventBridge, Lambda, Systems Manager, IAM</dd></div><div><dt>Cost</dt><dd>Low. Two small instances, a load balancer, and a few Lambda runs.</dd></div></dl></header><section><h2>Architecture</h2><p>A CloudWatch alarm on unhealthy hosts triggers a Lambda through EventBridge. The Lambda restarts the service with Systems Manager, waits, and tells the Auto Scaling group to replace any instance that is still failing.</p><div class="diagram" data-spec="p7"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>The load balancer health check marks an instance unhealthy and the <code>UnHealthyHostCount</code> alarm goes into ALARM.</li><li>EventBridge receives the alarm state change and invokes the remediation Lambda.</li><li>Step 1: the Lambda uses SSM Run Command to restart the service on the unhealthy instances.</li><li>Step 2: after a wait, any instance that is still unhealthy is marked unhealthy in the Auto Scaling group, which launches a replacement.</li><li>The Lambda publishes each action to an SNS topic so a human can see what happened.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Build the base: an Auto Scaling group behind a load balancer</h3><p>Reuse the VPC, subnets, and ALB from Project 1. Instances sit in private subnets and need NAT (or VPC endpoints) to install packages and reach Systems Manager. Attach an instance profile with the <code>AmazonSSMManagedInstanceCore</code> policy.</p><div class="code"><span class="name">asg.tf</span><pre><code>data &quot;aws_ssm_parameter&quot; &quot;al2023&quot; {
+  name = &quot;/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64&quot;
+}
+
+resource &quot;aws_launch_template&quot; &quot;app&quot; {
+  name_prefix            = &quot;self-heal-&quot;
+  image_id               = data.aws_ssm_parameter.al2023.value
+  instance_type          = &quot;t3.micro&quot;
+  vpc_security_group_ids = [aws_security_group.app.id]
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ssm.name
+  }
+
+  user_data = base64encode(&lt;&lt;-EOT
+    #!/bin/bash
+    dnf install -y nginx
+    systemctl enable --now nginx
+  EOT
+  )
+}
+
+resource &quot;aws_autoscaling_group&quot; &quot;app&quot; {
+  min_size                  = 2
+  max_size                  = 3
+  desired_capacity          = 2
+  vpc_zone_identifier       = module.network.private_subnet_ids
+  target_group_arns         = [aws_lb_target_group.app.arn]
+  health_check_type         = &quot;ELB&quot;
+  health_check_grace_period = 120
+
+  launch_template {
+    id      = aws_launch_template.app.id
+    version = &quot;$Latest&quot;
+  }
+}</code></pre></div></li><li class="step"><h3>Alarm on unhealthy hosts</h3><p>The alarm needs no action of its own. CloudWatch publishes every alarm state change to EventBridge.</p><div class="code"><span class="name">alarm.tf</span><pre><code>resource &quot;aws_cloudwatch_metric_alarm&quot; &quot;unhealthy&quot; {
+  alarm_name          = &quot;app-unhealthy-hosts&quot;
+  namespace           = &quot;AWS/ApplicationELB&quot;
+  metric_name         = &quot;UnHealthyHostCount&quot;
+  statistic           = &quot;Maximum&quot;
+  period              = 60
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = &quot;GreaterThanThreshold&quot;
+
+  dimensions = {
+    TargetGroup  = aws_lb_target_group.app.arn_suffix
+    LoadBalancer = aws_lb.app.arn_suffix
+  }
+}</code></pre></div></li><li class="step"><h3>Write the remediation Lambda</h3><p>The function tries the cheap fix first, waits, and escalates only for instances that are still unhealthy.</p><div class="code"><span class="name">heal.py</span><pre><code>import os
+import time
+
+import boto3
+
+elbv2 = boto3.client(&quot;elbv2&quot;)
+ssm = boto3.client(&quot;ssm&quot;)
+asg = boto3.client(&quot;autoscaling&quot;)
+sns = boto3.client(&quot;sns&quot;)
+
+TG_ARN = os.environ[&quot;TARGET_GROUP_ARN&quot;]
+TOPIC_ARN = os.environ[&quot;TOPIC_ARN&quot;]
+
+
+def unhealthy_instances():
+    health = elbv2.describe_target_health(TargetGroupArn=TG_ARN)[&quot;TargetHealthDescriptions&quot;]
+    return [t[&quot;Target&quot;][&quot;Id&quot;] for t in health if t[&quot;TargetHealth&quot;][&quot;State&quot;] == &quot;unhealthy&quot;]
+
+
+def notify(message):
+    sns.publish(TopicArn=TOPIC_ARN, Subject=&quot;Self-healing action&quot;, Message=message)
+
+
+def handler(event, context):
+    bad = unhealthy_instances()
+    if not bad:
+        return {&quot;handled&quot;: []}
+
+    # Step 1: try the cheap fix
+    ssm.send_command(
+        InstanceIds=bad,
+        DocumentName=&quot;AWS-RunShellScript&quot;,
+        Parameters={&quot;commands&quot;: [&quot;systemctl restart nginx&quot;]},
+    )
+    notify(f&quot;Restarted nginx on {bad}&quot;)
+
+    # Step 2: wait, then replace anything still unhealthy
+    time.sleep(90)
+    still_bad = [i for i in unhealthy_instances() if i in bad]
+    for instance_id in still_bad:
+        asg.set_instance_health(
+            InstanceId=instance_id,
+            HealthStatus=&quot;Unhealthy&quot;,
+            ShouldRespectGracePeriod=False,
+        )
+    if still_bad:
+        notify(f&quot;Restart did not help. ASG is replacing {still_bad}&quot;)
+    return {&quot;handled&quot;: bad, &quot;replaced&quot;: still_bad}</code></pre></div></li><li class="step"><h3>Deploy the function and connect EventBridge</h3><p>Set the Lambda timeout to at least 180 seconds because it waits for 90.</p><div class="code"><span class="name">remediation.tf</span><pre><code>data &quot;archive_file&quot; &quot;heal&quot; {
+  type        = &quot;zip&quot;
+  source_file = &quot;${path.module}/heal.py&quot;
+  output_path = &quot;${path.module}/heal.zip&quot;
+}
+
+resource &quot;aws_lambda_function&quot; &quot;heal&quot; {
+  function_name    = &quot;self-heal&quot;
+  role             = aws_iam_role.heal.arn
+  runtime          = &quot;python3.12&quot;
+  handler          = &quot;heal.handler&quot;
+  filename         = data.archive_file.heal.output_path
+  source_code_hash = data.archive_file.heal.output_base64sha256
+  timeout          = 180
+
+  environment {
+    variables = {
+      TARGET_GROUP_ARN = aws_lb_target_group.app.arn
+      TOPIC_ARN        = aws_sns_topic.alerts.arn
+    }
+  }
+}
+
+resource &quot;aws_cloudwatch_event_rule&quot; &quot;alarm&quot; {
+  name = &quot;app-unhealthy-alarm&quot;
+  event_pattern = jsonencode({
+    source        = [&quot;aws.cloudwatch&quot;]
+    &quot;detail-type&quot; = [&quot;CloudWatch Alarm State Change&quot;]
+    detail = {
+      alarmName = [&quot;app-unhealthy-hosts&quot;]
+      state     = { value = [&quot;ALARM&quot;] }
+    }
+  })
+}
+
+resource &quot;aws_cloudwatch_event_target&quot; &quot;lambda&quot; {
+  rule = aws_cloudwatch_event_rule.alarm.name
+  arn  = aws_lambda_function.heal.arn
+}
+
+resource &quot;aws_lambda_permission&quot; &quot;events&quot; {
+  statement_id  = &quot;AllowEventBridge&quot;
+  action        = &quot;lambda:InvokeFunction&quot;
+  function_name = aws_lambda_function.heal.function_name
+  principal     = &quot;events.amazonaws.com&quot;
+  source_arn    = aws_cloudwatch_event_rule.alarm.arn
+}</code></pre></div></li><li class="step"><h3>Give the function only the permissions it needs</h3><p>Attach this policy to the Lambda role, together with the basic execution policy for logs. The wildcard resources keep the lab simple. Scope them to your target group, instances, and topic before using this anywhere real.</p><div class="code"><span class="name">lambda-policy.json</span><pre><code>{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: [
+        &quot;elasticloadbalancing:DescribeTargetHealth&quot;,
+        &quot;ssm:SendCommand&quot;,
+        &quot;autoscaling:SetInstanceHealth&quot;,
+        &quot;sns:Publish&quot;
+      ],
+      &quot;Resource&quot;: &quot;*&quot;
+    }
+  ]
+}</code></pre></div></li><li class="step"><h3>Break something on purpose</h3><p>First test the cheap fix by stopping nginx. Then test escalation by masking the service so a restart cannot succeed.</p><div class="code"><span class="name">terminal</span><pre><code># Test 1: a restart should heal it
+aws ssm send-command --instance-ids i-0123456789abcdef0 \
+  --document-name AWS-RunShellScript \
+  --parameters &#x27;commands=[&quot;systemctl stop nginx&quot;]&#x27;
+
+# Test 2: restart will fail, so the instance should be replaced
+aws ssm send-command --instance-ids i-0123456789abcdef0 \
+  --document-name AWS-RunShellScript \
+  --parameters &#x27;commands=[&quot;systemctl mask --now nginx&quot;]&#x27;</code></pre></div></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>After test 1, the target returns to healthy without a new instance, and an SNS message reports the restart.</li><li>After test 2, the instance disappears from the group, a new one launches and registers healthy, and an SNS message reports the replacement.</li><li>The Lambda logs show both steps, and the alarm returns to OK.</li><li>The Lambda role can do nothing outside the listed actions.</li></ul></section><section><h2>Clean up and cost</h2><p>Destroy the stack when finished. Check the Lambda and EventBridge rule are gone so a leftover automation cannot act on resources you reuse later.</p></section><section><h2>Stretch goals</h2><ul><li>Add a cooldown so the same instance cannot be remediated repeatedly in a short window.</li><li>Replace the Lambda logic with a Systems Manager Automation runbook that has approval steps.</li><li>Use AWS Fault Injection Service to test failures in a controlled way.</li><li>Add an EC2 status check alarm with the recover action for instance-level failures.</li></ul></section><p class="next">Next project: <a href="#p8">8. Hybrid cloud VPN lab</a></p></section><section class="project" id="p8" aria-labelledby="p8-h1"><header><h1 id="p8-h1" tabindex="-1">Hybrid cloud connectivity lab</h1><p class="lede">Connect a simulated on-premises network to an AWS VPC over IPsec with BGP, then test failover between the two tunnels. This is the project where a networking background pays off most.</p><dl class="facts"><div><dt>Level</dt><dd>Advanced</dd></div><div><dt>Time</dt><dd>2 to 3 weekends</dd></div><div><dt>Skills practiced</dt><dd>Site-to-Site VPN, IPsec, BGP, strongSwan, FRR, Terraform, Ansible</dd></div><div><dt>Cost</dt><dd>Low to moderate. The VPN connection bills by the hour, so destroy it after each session.</dd></div></dl></header><section><h2>Architecture</h2><p>A Linux router running strongSwan and FRR stands in for your data center. It builds two IPsec tunnels to AWS and exchanges routes with BGP.</p><div class="diagram" data-spec="p8"></div><h3 style="margin-top:28px">How it works</h3><ol class="flowlist"><li>The on-prem router establishes two IPsec tunnels to the AWS VPN endpoints.</li><li>Inside each tunnel, BGP advertises your on-prem LAN to AWS and AWS advertises the VPC CIDR back.</li><li>The virtual private gateway propagates the learned routes into the VPC route table, so instances know how to reach on-prem.</li><li>If one tunnel fails, BGP withdraws its routes and traffic continues over the other tunnel.</li></ol></section><section><h2>Build steps</h2><ol class="steps"><li class="step"><h3>Plan addresses and ASNs</h3><table class="tbl"><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>On-prem LAN</td><td><code>192.168.10.0/24</code></td></tr><tr><td>AWS VPC</td><td><code>10.0.0.0/16</code></td></tr><tr><td>On-prem ASN</td><td><code>65010</code></td></tr><tr><td>AWS side ASN</td><td><code>64512</code></td></tr><tr><td>Tunnel inside addresses</td><td>Assigned by AWS from <code>169.254.0.0/16</code></td></tr></tbody></table></li><li class="step"><h3>Choose how to build the on-prem side</h3><p>You need a Linux machine with a reachable public IP. Two practical options:</p><ul><li>A lab on your own machine (EVE-NG, GNS3, or containerlab) with a router VM. If it is behind a home NAT, set the customer gateway IP to your public address and forward UDP 500 and 4500. AWS supports NAT traversal.</li><li>A small EC2 instance in another VPC or region acting as the router. This is the quickest and most repeatable option.</li></ul></li><li class="step"><h3>Create the AWS side with Terraform</h3><div class="code"><span class="name">vpn.tf</span><pre><code>resource &quot;aws_vpn_gateway&quot; &quot;vgw&quot; {
+  vpc_id          = module.vpc.vpc_id
+  amazon_side_asn = 64512
+}
+
+resource &quot;aws_customer_gateway&quot; &quot;onprem&quot; {
+  bgp_asn    = 65010
+  ip_address = var.onprem_public_ip
+  type       = &quot;ipsec.1&quot;
+}
+
+resource &quot;aws_vpn_connection&quot; &quot;onprem&quot; {
+  vpn_gateway_id      = aws_vpn_gateway.vgw.id
+  customer_gateway_id = aws_customer_gateway.onprem.id
+  type                = &quot;ipsec.1&quot;
+  static_routes_only  = false   # use BGP
+}
+
+resource &quot;aws_vpn_gateway_route_propagation&quot; &quot;private&quot; {
+  vpn_gateway_id = aws_vpn_gateway.vgw.id
+  route_table_id = module.vpc.private_route_table_id
+}
+
+output &quot;tunnel1_address&quot; {
+  value = aws_vpn_connection.onprem.tunnel1_address
+}</code></pre></div><p>Allow ICMP and SSH from <code>192.168.10.0/24</code> on the test instance's security group.</p></li><li class="step"><h3>Download the VPN configuration</h3><p>In the VPC console, open the VPN connection and choose <b>Download configuration</b>. Pick Strongswan if it is listed, otherwise Generic. The file contains the tunnel endpoints, IKE and IPsec parameters, pre-shared keys, and the inside tunnel addresses you need next.</p></li><li class="step"><h3>Prepare the on-prem router</h3><div class="code"><span class="name">terminal</span><pre><code>sudo apt update
+sudo apt install -y strongswan frr
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sed -i &#x27;s/^bgpd=no/bgpd=yes/&#x27; /etc/frr/daemons
+sudo systemctl restart frr</code></pre></div><p>Apply the IPsec parameters and secrets from the downloaded file to strongSwan, create the tunnel interfaces it describes, and start the tunnels. Then configure BGP with the inside addresses from the same file:</p><div class="code"><span class="name">/etc/frr/frr.conf (excerpt)</span><pre><code>router bgp 65010
+ bgp router-id 192.168.10.1
+ neighbor 169.254.10.1 remote-as 64512     ! tunnel 1 AWS inside address
+ neighbor 169.254.11.1 remote-as 64512     ! tunnel 2 AWS inside address
+ !
+ address-family ipv4 unicast
+  network 192.168.10.0/24
+ exit-address-family</code></pre></div><p class="note">The inside addresses above are placeholders. Use the ones in your downloaded configuration.</p></li><li class="step"><h3>Verify the tunnels and BGP</h3><div class="code"><span class="name">terminal</span><pre><code># On the router
+sudo ipsec statusall
+sudo vtysh -c &quot;show ip bgp summary&quot;
+
+# From your workstation
+aws ec2 describe-vpn-connections \
+  --vpn-connection-ids vpn-0123456789abcdef0 \
+  --query &#x27;VpnConnections[0].VgwTelemetry&#x27;</code></pre></div></li><li class="step"><h3>Test connectivity and failover</h3><p>Ping the EC2 test instance's private address from a host on the on-prem LAN while you break one tunnel. Watch BGP and the ping.</p><div class="code"><span class="name">terminal</span><pre><code># Start a continuous ping and leave it running
+ping 10.0.10.25
+
+# In a second terminal, take down one tunnel&#x27;s interface
+sudo ip link set vti1 down
+sudo vtysh -c &quot;show ip bgp summary&quot;</code></pre></div></li><li class="step"><h3>Automate the router configuration (optional)</h3><p>Once it works by hand, capture the strongSwan and FRR configuration as Ansible templates so you can rebuild the on-prem side in minutes.</p></li></ol></section><section><h2>Verify it works</h2><ul class="checks"><li>Both tunnels show UP in the VPN connection telemetry, and BGP shows Established for both neighbors.</li><li>The VPC route table contains <code>192.168.10.0/24</code> learned through the virtual private gateway.</li><li>The on-prem host reaches the EC2 instance by private IP, and the instance can reach the on-prem host.</li><li>Taking down one tunnel causes a short interruption at most, then pings continue over the second tunnel.</li></ul></section><section><h2>Clean up and cost</h2><p>Run <code>terraform destroy</code> after each session and stop the router VM or instance. Keep the pre-shared keys out of Git.</p></section><section><h2>Stretch goals</h2><ul><li>Replace the virtual private gateway with a Transit Gateway attachment (Project 3).</li><li>Add BFD for faster failure detection and prefix lists to control what you advertise and accept.</li><li>Alarm on the VPN <code>TunnelState</code> metric with the monitoring stack from Project 5.</li><li>Compare this design with AWS Direct Connect and write down when you would choose each.</li></ul></section><p class="next">All projects done? <a href="#portfolio">Review the portfolio checklist</a>.</p></section><section class="project" id="portfolio" aria-labelledby="portfolio-h1"><header><h1 id="portfolio-h1" tabindex="-1">Portfolio checklist</h1><p class="lede">A strong repository is easy for a reviewer to understand in two minutes. Use this for every project you publish.</p></header><section>
+      
+      <p>A strong repository is easy for a reviewer to understand in two minutes.</p>
+      <ul class="checks">
+        <li>A README that opens with a one-paragraph summary and the architecture diagram.</li>
+        <li>Setup instructions another person can follow, including prerequisites and the bootstrap step.</li>
+        <li>A short section on design decisions and trade-offs, such as one NAT gateway versus one per zone.</li>
+        <li>A cost note and the clean-up command.</li>
+        <li>Screenshots of a passing pipeline run and the running app.</li>
+        <li>No secrets or account IDs committed. Check the Git history before you publish.</li>
+      </ul>
+    </section></section>
+</main>
+</div>
+<script>
+
+var SPECS = {
+  p2: {
+    title: "Config backup and compliance checker architecture",
+    nodes: [
+      {id:"sched", c:0, r:0, l:"Scheduler", s:"GitHub Actions cron"},
+      {id:"job", c:1, r:0, l:"Backup job", s:"Python and Netmiko"},
+      {id:"dev", c:2, r:0, l:"Network devices", s:"lab routers over SSH", k:"ext"},
+      {id:"s3", c:1, r:1, l:"S3 bucket", s:"versioned configs"},
+      {id:"chk", c:1, r:2, l:"Compliance check", s:"rules vs. config"},
+      {id:"base", c:2, r:2, l:"Baseline rules", s:"baseline.yaml in Git"},
+      {id:"alert", c:0, r:2, l:"Slack alert", s:"sent on drift"}
+    ],
+    edges: [["sched","job"],["job","dev"],["job","s3","save config"],["s3","chk","read latest"],["base","chk"],["chk","alert"]]
+  },
+  p3: {
+    title: "Transit Gateway hub-and-spoke architecture",
+    nodes: [
+      {id:"shared", c:1, r:0, l:"Shared services", s:"10.0.0.0/16", k:"priv"},
+      {id:"a", c:0, r:1, l:"Spoke A VPC", s:"10.1.0.0/16", k:"priv"},
+      {id:"tgw", c:1, r:1, l:"Transit Gateway", s:"hub, ASN 64512"},
+      {id:"b", c:2, r:1, l:"Spoke B VPC", s:"10.2.0.0/16", k:"priv"},
+      {id:"onprem", c:1, r:2, l:"Simulated on-prem", s:"10.100.0.0/16", k:"ext"}
+    ],
+    groups: [{l:"AWS region", m:["shared","a","tgw","b"]}],
+    edges: [["a","tgw","",{both:1}],["b","tgw","",{both:1}],["shared","tgw","VPC attachment",{both:1}],["tgw","onprem","IPsec VPN attachment",{both:1}]]
+  },
+  p4: {
+    title: "Kubernetes on EKS architecture",
+    nodes: [
+      {id:"users", c:0, r:0, l:"Users", s:"browser"},
+      {id:"r53", c:1, r:0, l:"Route 53", s:"app hostname"},
+      {id:"alb", c:2, r:0, l:"ALB", s:"created from Ingress"},
+      {id:"dns", c:1, r:1, l:"ExternalDNS", s:"syncs DNS records"},
+      {id:"web", c:2, r:1, l:"frontend pods", s:"nginx"},
+      {id:"ctrl", c:3, r:1, l:"LB Controller", s:"builds the ALB"},
+      {id:"api", c:2, r:2, l:"api pods", s:"internal only", k:"priv"}
+    ],
+    groups: [{l:"EKS cluster", m:["dns","web","ctrl","api"]}],
+    edges: [["users","r53"],["r53","alb"],["alb","web","HTTP to pod IPs"],["web","api","allowed by NetworkPolicy"],["dns","r53","writes records",{dash:1}],["ctrl","alb","creates",{dash:1,route:"vh"}]]
+  },
+  p5: {
+    title: "Network monitoring and alerting architecture",
+    nodes: [
+      {id:"vpc", c:0, r:0, l:"VPC", s:"flow logs enabled", k:"priv"},
+      {id:"cwl", c:1, r:0, l:"CloudWatch Logs", s:"flow log group"},
+      {id:"mf", c:2, r:0, l:"Metric filter", s:"counts REJECT"},
+      {id:"alarm", c:3, r:0, l:"CloudWatch alarm", s:"threshold breach"},
+      {id:"s3", c:1, r:1, l:"S3 archive", s:"long-term flow logs"},
+      {id:"ath", c:2, r:1, l:"Athena", s:"optional queries", k:"opt"},
+      {id:"sns", c:3, r:1, l:"SNS topic", s:"alert fan-out"},
+      {id:"cwm", c:1, r:2, l:"CloudWatch metrics", s:"NAT, ALB, VPN"},
+      {id:"graf", c:2, r:2, l:"Grafana", s:"dashboards"},
+      {id:"mail", c:3, r:2, l:"Email or Slack", s:"on-call"}
+    ],
+    edges: [["vpc","cwl"],["cwl","mf"],["mf","alarm"],["vpc","s3","",{route:"vh"}],["s3","ath","",{dash:1}],["alarm","sns"],["sns","mail"],["cwm","graf"]]
+  },
+  p6: {
+    title: "NetDevOps pipeline architecture",
+    nodes: [
+      {id:"eng", c:0, r:0, l:"Engineer", s:"edits YAML intent"},
+      {id:"pr", c:1, r:0, l:"Pull request", s:"review and CI"},
+      {id:"ci", c:2, r:0, l:"CI checks", s:"lint, render, Batfish"},
+      {id:"git", c:1, r:1, l:"Git main", s:"source of truth"},
+      {id:"cd", c:2, r:1, l:"CD on merge", s:"Ansible playbook"},
+      {id:"notify", c:0, r:2, l:"Slack or revert", s:"pass, or roll back"},
+      {id:"post", c:1, r:2, l:"Post-checks", s:"pytest and Netmiko"},
+      {id:"dev", c:2, r:2, l:"Lab network", s:"routers and switches", k:"ext"}
+    ],
+    edges: [["eng","pr"],["pr","ci"],["pr","git","merge if green"],["git","cd"],["cd","dev","push config"],["dev","post"],["post","notify"]]
+  },
+  p7: {
+    title: "Self-healing infrastructure architecture",
+    nodes: [
+      {id:"app", c:0, r:0, l:"App instances", s:"Auto Scaling group", k:"priv"},
+      {id:"alarm", c:1, r:0, l:"CloudWatch alarm", s:"unhealthy hosts"},
+      {id:"eb", c:2, r:0, l:"EventBridge", s:"alarm state change"},
+      {id:"lam", c:3, r:0, l:"Remediation Lambda", s:"decides the fix"},
+      {id:"sns", c:4, r:0, l:"SNS topic", s:"tells on-call"},
+      {id:"ssm", c:3, r:1, l:"SSM Run Command", s:"step 1: restart"},
+      {id:"asg", c:3, r:2, l:"ASG replace", s:"step 2: new instance"}
+    ],
+    edges: [["app","alarm"],["alarm","eb"],["eb","lam"],["lam","sns"],["lam","ssm"],["ssm","asg","still failing"],["asg","app","replaces",{dash:1}]]
+  },
+  p8: {
+    title: "Hybrid cloud connectivity lab architecture",
+    nodes: [
+      {id:"host", c:0, r:0, l:"Lab host", s:"192.168.10.10"},
+      {id:"r1", c:1, r:0, l:"Router R1", s:"strongSwan and FRR"},
+      {id:"vpn", c:2, r:0, l:"Site-to-Site VPN", s:"2 IPsec tunnels, BGP"},
+      {id:"vgw", c:3, r:0, l:"VPN gateway", s:"ASN 64512"},
+      {id:"ans", c:1, r:1, l:"Ansible", s:"configures R1"},
+      {id:"vpc", c:3, r:1, l:"VPC 10.0.0.0/16", s:"EC2 test instance", k:"priv"}
+    ],
+    groups: [{l:"Simulated on-prem", m:["host","r1"]},{l:"AWS", m:["vpn","vgw","vpc"]}],
+    edges: [["host","r1"],["r1","vpn","",{both:1}],["vpn","vgw"],["vgw","vpc","route propagation"],["ans","r1","config",{dash:1}]]
+  }
+};
+
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var CW = 190, RH = 104, NW = 156, NH = 52, PX = 24, PY = 36;
+
+  function el(name, attrs, text) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    if (text !== undefined) { e.textContent = text; }
+    return e;
+  }
+
+  function route(a, b, kind) {
+    var d;
+    if (!kind && a.r === b.r) {
+      d = b.c > a.c ? 1 : -1;
+      return [[d > 0 ? a.x + NW : a.x, a.cy], [d > 0 ? b.x : b.x + NW, b.cy]];
+    }
+    if (!kind && a.c === b.c) {
+      d = b.r > a.r ? 1 : -1;
+      return [[a.cx, d > 0 ? a.y + NH : a.y], [b.cx, d > 0 ? b.y : b.y + NH]];
+    }
+    var v = b.r > a.r ? 1 : -1, h = b.c > a.c ? 1 : -1;
+    if (kind === "vh") {
+      return [[a.cx, v > 0 ? a.y + NH : a.y], [a.cx, b.cy], [h > 0 ? b.x : b.x + NW, b.cy]];
+    }
+    return [[h > 0 ? a.x + NW : a.x, a.cy], [b.cx, a.cy], [b.cx, v > 0 ? b.y : b.y + NH]];
+  }
+
+  function render(host, key, spec) {
+    var byId = {}, maxC = 0, maxR = 0;
+    spec.nodes.forEach(function (n) {
+      n.x = PX + n.c * CW + (CW - NW) / 2;
+      n.y = PY + n.r * RH + (RH - NH) / 2;
+      n.cx = n.x + NW / 2;
+      n.cy = n.y + NH / 2;
+      byId[n.id] = n;
+      maxC = Math.max(maxC, n.c);
+      maxR = Math.max(maxR, n.r);
+    });
+    var W = PX * 2 + (maxC + 1) * CW, H = PY * 2 + (maxR + 1) * RH;
+    var svg = el("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-labelledby": key + "-t " + key + "-d"});
+    svg.style.maxWidth = W + "px";
+    svg.style.minWidth = Math.round(W * 0.85) + "px";
+    svg.appendChild(el("title", {id: key + "-t"}, spec.title));
+    var desc = spec.edges.map(function (e) { return byId[e[0]].l + " connects to " + byId[e[1]].l; }).join(". ");
+    svg.appendChild(el("desc", {id: key + "-d"}, desc + "."));
+
+    (spec.groups || []).forEach(function (g) {
+      var xs = [], ys = [], xe = [], ye = [];
+      g.m.forEach(function (id) { var n = byId[id]; xs.push(n.x); ys.push(n.y); xe.push(n.x + NW); ye.push(n.y + NH); });
+      var x1 = Math.min.apply(null, xs) - 14, y1 = Math.min.apply(null, ys) - 32;
+      var x2 = Math.max.apply(null, xe) + 14, y2 = Math.max.apply(null, ye) + 14;
+      svg.appendChild(el("rect", {"class": "grp", x: x1, y: y1, width: x2 - x1, height: y2 - y1, rx: 6}));
+      svg.appendChild(el("text", {"class": "glabel", x: x1 + 10, y: y1 + 18}, g.l));
+    });
+
+    var labels = [];
+    spec.edges.forEach(function (e) {
+      var a = byId[e[0]], b = byId[e[1]], o = e[3] || {};
+      var pts = route(a, b, o.route);
+      var d = "M" + pts.map(function (p) { return p[0] + " " + p[1]; }).join(" L");
+      var cls = o.dash ? (o.egress ? "egress" : "dbflow") : "flow";
+      if (o.both) { cls += " both"; }
+      svg.appendChild(el("path", {"class": cls, d: d}));
+      if (e[2]) {
+        var p0 = pts[0], p1 = pts[1];
+        if (p0[1] === p1[1]) {
+          labels.push(el("text", {"class": "elabel", x: (p0[0] + p1[0]) / 2, y: p0[1] - 7, "text-anchor": "middle"}, e[2]));
+        } else {
+          labels.push(el("text", {"class": "elabel", x: p0[0] + 8, y: (p0[1] + p1[1]) / 2 + 4}, e[2]));
+        }
+      }
+    });
+
+    spec.nodes.forEach(function (n) {
+      var cls = "box";
+      if (n.k === "priv") { cls = "priv"; }
+      if (n.k === "pub") { cls = "pub"; }
+      if (n.k === "ext" || n.k === "opt") { cls = "box optional"; }
+      svg.appendChild(el("rect", {"class": cls, x: n.x, y: n.y, width: NW, height: NH, rx: 4}));
+      if (n.s) {
+        svg.appendChild(el("text", {"class": "tb mid", x: n.cx, y: n.cy - 4}, n.l));
+        svg.appendChild(el("text", {"class": "ts mid", x: n.cx, y: n.cy + 13}, n.s));
+      } else {
+        svg.appendChild(el("text", {"class": "tb mid", x: n.cx, y: n.cy + 5}, n.l));
+      }
+    });
+    labels.forEach(function (t) { svg.appendChild(t); });
+    host.appendChild(svg);
+  }
+
+  document.querySelectorAll("[data-spec]").forEach(function (host) {
+    var key = host.getAttribute("data-spec");
+    if (SPECS[key]) {
+      try { render(host, "dg-" + key, SPECS[key]); } catch (err) { console.error("Diagram failed:", key, err); }
+    }
+  });
+})();
+
+(function () {
+  document.documentElement.classList.add("js");
+  var panels = [].slice.call(document.querySelectorAll(".project"));
+  var links = [].slice.call(document.querySelectorAll(".toc a"));
+
+  function find(id) {
+    for (var i = 0; i < panels.length; i++) { if (panels[i].id === id) { return panels[i]; } }
+    return null;
+  }
+
+  function show(id, fromClick) {
+    var current = find(id) || find("home");
+    id = current.id;
+    panels.forEach(function (p) { p.classList.toggle("active", p === current); });
+    links.forEach(function (a) {
+      if (a.getAttribute("href") === "#" + id) { a.setAttribute("aria-current", "page"); }
+      else { a.removeAttribute("aria-current"); }
+    });
+    var h1 = current.querySelector("h1");
+    document.title = h1.textContent + " | DevOps project guide";
+    if (fromClick) {
+      window.scrollTo(0, 0);
+      try { h1.focus({preventScroll: true}); } catch (err) {}
+    }
+  }
+
+  // Switch directly on click so it works even where URL hash changes are blocked
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest("a[href^='#']") : null;
+    if (!a) { return; }
+    var id = a.getAttribute("href").slice(1);
+    if (!find(id)) { return; }
+    e.preventDefault();
+    show(id, true);
+    try { history.pushState(null, "", "#" + id); } catch (err) {}
+  });
+
+  window.addEventListener("popstate", function () { show(location.hash.slice(1)); });
+  window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
+  show(location.hash.slice(1));
+})();
+
+(function () {
+  document.querySelectorAll(".code").forEach(function (block) {
+    var pre = block.querySelector("pre");
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy";
+    btn.setAttribute("aria-label", "Copy code to clipboard");
+    btn.addEventListener("click", function () {
+      var done = function () {
+        btn.textContent = "Copied";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+      };
+      try { navigator.clipboard.writeText(pre.innerText).then(done, function () {}); } catch (e) {}
+    });
+    block.appendChild(btn);
+  });
+})();
+
+</script>
+</body>
+</html>
